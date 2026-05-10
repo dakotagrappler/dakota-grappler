@@ -782,9 +782,10 @@ function Mileage({user}){
     </div>
     <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,overflowX:"auto"}}>
       <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,minWidth:380}}>
-        <thead><tr style={{background:NAVY,color:WHITE}}>{["Date","Person","Miles","Purpose"].map(h=><th key={h} style={{padding:"10px 12px",textAlign:h==="Miles"?"right":"left",fontWeight:600}}>{h}</th>)}</tr></thead>
-        <tbody>{filtered.map((l,i)=><tr key={l.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}><td style={{padding:"9px 12px",color:MUTED}}>{l.date}</td><td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{l.user}</td><td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>{l.miles}</td><td style={{padding:"9px 12px",color:MUTED}}>{l.note}</td></tr>)}</tbody>
-      </table>
+        <thead><tr style={{background:NAVY,color:WHITE}}>{["Date","Person","Miles","Purpose",""].map(h=><th key={h} style={{padding:"10px 12px",textAlign:h==="Miles"?"right":"left",fontWeight:600}}>{h}</th>)}</tr></thead>
+        <tbody>{filtered.map((l,i)=><tr key={l.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}><td style={{padding:"9px 12px",color:MUTED}}>{l.date}</td><td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{l.user}</td><td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>{l.miles}</td></tr>)}</tbody>
+      </table><td style={{padding:"9px 12px",color:MUTED}}>{l.note}</td>
+<td style={{padding:"9px 12px"}}><Btn small color="red" onClick={()=>{if(window.confirm("Delete this trip log?"))setLogs(prev=>prev.filter(x=>x.id!==l.id));}}>🗑</Btn></td>
     </div>
     {showForm&&<Modal title="Log Trip" onClose={()=>setShowForm(false)}>
       {user.role==="owner"&&<Sel label="Person" value={f.user} onChange={v=>set("user",v)} options={USERS.map(u=>u.name)}/>}
