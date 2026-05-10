@@ -720,7 +720,7 @@ function BookLibrary(){
   </div>;
 }
 
-function EventSale(){
+function EventSale({products}){
   const [eventName,setEventName]=useState("East West Tourney Sale");
   const [editingName,setEditingName]=useState(false);
   const [cart,setCart]=useState([]);
@@ -738,7 +738,7 @@ function EventSale(){
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
       <div><div style={{fontWeight:600,color:NAVY,marginBottom:10,fontSize:14}}>Products</div>
-        <div style={{display:"grid",gap:10}}>{INIT_PRODS.map(p=><div key={p.id} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:9,padding:"12px 14px"}}>
+        <div style={{display:"grid",gap:10}}>{products.map(p=><div key={p.id} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:9,padding:"12px 14px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:p.sizes.length>0?8:0}}><div><div style={{fontWeight:600,color:NAVY,fontSize:13}}>{p.name}</div><div style={{fontWeight:700,color:GOLD,fontSize:15}}>${p.price}</div></div><Btn small onClick={()=>addToCart(p)}>+ Add</Btn></div>
           {p.sizes.length>0&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{p.sizes.map(sz=><button key={sz} onClick={()=>setSelSize(prev=>({...prev,[p.id]:sz}))} style={{background:selSize[p.id]===sz?NAVY:LIGHT_BG,color:selSize[p.id]===sz?WHITE:NAVY,border:`1px solid ${selSize[p.id]===sz?NAVY:BORDER}`,borderRadius:5,padding:"3px 10px",fontSize:12,cursor:"pointer",fontWeight:selSize[p.id]===sz?600:400}}>{sz}</button>)}</div>}
         </div>)}</div>
@@ -898,7 +898,7 @@ export default function App(){
     rankings:<Rankings/>,
     website:<WebsiteAds/>,
     books:<BookLibrary/>,
-    event:<EventSale/>,
+    event:<EventSale products={INIT_PRODS}/>,
     mileage:<Mileage user={currentUser}/>,
     reports:<Reports advertisers={advertisers} salespeople={salespeople} seasons={seasons} setSeasons={setSeasons}/>,
     settings:<Settings salespeople={salespeople} setSalespeople={setSalespeople}/>,
