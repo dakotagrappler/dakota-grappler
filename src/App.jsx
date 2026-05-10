@@ -519,7 +519,8 @@ function Advertisers({advertisers,setAdvertisers,salespeople,user,seasons,setSea
             <Btn small onClick={()=>setInvoiceView(a)}>Invoice</Btn>
             {!a.paid&&<Btn small color="green" onClick={()=>markPaid(a.id)}>✓ Pay</Btn>}
             {a.paid&&<Btn small color="light" onClick={()=>unmarkPaid(a.id)}>↩ Unpay</Btn>}
-            {a.newAd&&<Btn small color="red" onClick={()=>clearNewAd(a.id)}>Clear</Btn>}
+           {a.newAd&&<Btn small color="red" onClick={()=>clearNewAd(a.id)}>Clear</Btn>}
+<Btn small color="red" onClick={()=>{if(window.confirm(`Delete ${a.business}?`))setAdvertisers(prev=>prev.filter(x=>x.id!==a.id));}}>🗑</Btn>
           </div></td>
         </tr>)}</tbody>
       </table>
@@ -571,6 +572,7 @@ function Invoices({advertisers,seasons,setSeasons}){
             <Btn small color="green" onClick={()=>alert("📧 Invoice emailed to "+a.email)}>📧</Btn>
             <Btn small color="gold" onClick={()=>window.print()}>🖨️</Btn>
             {a.overdue&&<Btn small color="red" onClick={()=>alert("📧 Reminder sent to "+a.email)}>⚠️</Btn>}
+<Btn small color="red" onClick={()=>{if(window.confirm(`Delete invoice for ${a.business}?`))setAdvertisers(prev=>prev.filter(x=>x.id!==a.id));}}>🗑</Btn>
           </div></td>
         </tr>)}</tbody>
       </table>
@@ -702,7 +704,8 @@ function BookLibrary(){
     <div style={{display:"grid",gap:12,marginBottom:"1rem"}}>{books.map(b=><div key={b.id} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,padding:"1rem 1.25rem"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
         <div><div style={{fontWeight:700,color:NAVY,fontSize:15}}>📘 {b.name}</div><div style={{color:MUTED,fontSize:12,marginTop:2}}>{b.pages} pages · Uploaded {b.uploaded}{b.file&&<span style={{color:GREEN}}> · ✓ PDF ready</span>}</div></div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn small color="light">👁 View</Btn><Btn small onClick={()=>{setSale({buyer:"",email:"",price:"20",payment:"Cash"});setSellModal(b);}}>💰 Sell Digital</Btn><Btn small color="green" onClick={()=>alert("📧 Enter email to send PDF")}>📧 Email</Btn></div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn small color="green" onClick={()=>alert("📧 Enter email to send PDF")}>📧 Email</Btn>
+<Btn small color="red" onClick={()=>{if(window.confirm(`Delete ${b.name}?`))setBooks(prev=>prev.filter(x=>x.id!==b.id));}}>🗑</Btn></div>
       </div>
     </div>)}</div>
     <div style={{display:"flex",gap:8}}><Btn onClick={()=>fileRef.current.click()}>+ Upload Book PDF</Btn><input ref={fileRef} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;setBooks(p=>[{id:Date.now(),season:DEFAULT_SEASONS[0],name:f.name.replace(".pdf",""),pages:0,uploaded:new Date().toISOString().slice(0,10),file:f.name},...p]);}}/></div>
