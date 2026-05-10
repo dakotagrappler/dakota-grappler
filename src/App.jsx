@@ -808,8 +808,13 @@ function Reports({advertisers,salespeople,seasons,setSeasons}){
   ads.forEach(a=>a.lineItems.forEach(li=>{if(!bySize[li.adSize])bySize[li.adSize]={count:0,total:0};bySize[li.adSize].count++;bySize[li.adSize].total+=li.amount*(li.qty||1);}));
   return <div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem",flexWrap:"wrap",gap:8}}>
-      <h2 style={{color:NAVY,fontWeight:700,margin:0}}>Reports</h2>
-      <SeasonPicker value={season} onChange={setSeason} seasons={seasons} setSeasons={setSeasons}/>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:"1rem"}}>
+  <h2 style={{color:NAVY,fontWeight:700,margin:0}}>Reports</h2>
+  <div style={{display:"flex",gap:8}}>
+    <SeasonPicker value={season} onChange={setSeason} seasons={seasons} setSeasons={setSeasons}/>
+    <Btn color="gold" onClick={()=>window.print()}>🖨️ Print / Save PDF</Btn>
+  </div>
+</div>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12,marginBottom:"1.5rem"}}>
       <StatCard label="Total Sales" value={`$${total.toLocaleString()}`} color={NAVY}/>
