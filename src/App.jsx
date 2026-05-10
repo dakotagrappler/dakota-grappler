@@ -497,7 +497,10 @@ function Advertisers({advertisers,setAdvertisers,salespeople,user,seasons,setSea
   return <div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem",flexWrap:"wrap",gap:8}}>
       <h2 style={{color:NAVY,fontWeight:700,margin:0}}>Advertisers</h2>
-      <Btn onClick={()=>{setEditing(null);setShowForm(true);}}>+ Add Advertiser</Btn>
+      <div style={{display:"flex",gap:8}}>
+  <ImportAdvertisers onImport={imported=>setAdvertisers(prev=>[...prev,...imported])} seasons={seasons} salespeople={salespeople}/>
+  <Btn onClick={()=>{setEditing(null);setShowForm(true);}}>+ Add Advertiser</Btn>
+</div>
     </div>
     <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:"1rem",alignItems:"center"}}>
       <SeasonPicker value={season} onChange={setSeason} seasons={seasons} setSeasons={setSeasons}/>
@@ -693,7 +696,125 @@ function WebsiteAds(){
     </Modal>}
   </div>;
 }
+function ImportAdvertisers({onImport,seasons,salespeople}){
+  const [showForm,setShowForm]=useState(false);
+  const [preview,setPreview]=useState([]);
+  const [error,setError]=useState("");
+  const fileRef=useRef();
 
+  const handleFile=e=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const text=ev.target.result;
+        const lines=text.split("\n").filter(l=>l.trim());
+        const headers=lines[0].split(",").map(h=>h.trim().toLowerCase().replace(/"/g,""));
+        const rows=lines.slice(1).map(line=>{
+          const vals=line.split(",").map(v=>v.trim().replace(/"/g,""));
+          const obj={};
+          headers.forEach((h,i)=>obj[h]=vals[i]||"");
+          return obj;
+        }).filter(r=>r.business||r["business name"]);
+        setPreview(rows);
+        setError("");
+      }catch(err){
+        setError("Could not read file. Make sure it is a CSV file.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const doImport=()=>{
+    const imported=preview.map((r,idx)=>({
+      id:Date.now()+idx,
+      business:r.business||r["business name"]||"",
+      contact:r.contact||r["contact name"]||"",
+      email:r.email||"",
+      phone:r.phone||"",
+      address:r.address||"",
+      city:r.city||"",
+      state:r.state||"ND",
+      zip:r.zip||"",
+      season:r.season||seasons[0]||getCurrentSeason(),
+      salesperson:r.salesperson||"Owner",
+      lineItems:[{
+        id:1,
+        adSize:r["ad size"]||r.adsize||AD_SIZES[0].name,
+        adType:r["ad type"]||r.adtype||"Book",
+        basePrice:Number(r.amount||r["base price"]||0),
+        discount:0,
+        discountType:"$",
+        amount:Number(r.amount||0),
+        size:"",
+        qty:1
+      }],
+      totalAmount:Number(r.amount||r.total||0),
+      paid:(r.paid||"").toLowerCase()==="yes"||(r.paid||"").toLowerCase()==="true",
+      dateSale:r["date sale"]||r.datesale||r.date||new Date().toISOString().slice(0,10),
+      datePaid:r["date paid"]||r.datepaid||"",
+      payMethod:r["pay method"]||r.paymethod||r.payment||"check",
+      checkNum:r["check #"]||r.checknum||"",
+      newAd:false,
+      newAdvertiser:false,
+      sameAd:true,
+      overdue:false,
+      notes:r.notes||"",
+      adPhoto:null,
+      lastYearPhoto:null,
+      history:[],
+      signature:null,
+    }));
+    onImport(imported);
+    setShowForm(false);
+    setPreview([]);
+    alert(`✓ Successfully imported ${imported.length} advertisers!`);
+  };
+
+  return <div style={{marginBottom:"1rem"}}>
+    <Btn color="light" onClick={()=>setShowForm(true)}>📥 Import from CSV/Excel</Btn>
+    {showForm&&<Modal title="Import Advertisers from CSV" onClose={()=>{setShowForm(false);setPreview([]);setError("");}} wide>
+      <div style={{marginBottom:"1rem"}}>
+        <div style={{fontWeight:600,color:NAVY,fontSize:14,marginBottom:8}}>Step 1 — Download the template</div>
+        <Btn small color="light" onClick={()=>{
+          const csv=`Business Name,Contact Name,Email,Phone,Address,City,State,Zip,Season,Salesperson,Ad Size,Ad Type,Amount,Paid,Date Sale,Date Paid,Pay Method,Check #,Notes\nBismarck Hardware Co.,Tom Fischer,tom@bisco.com,701-555-0101,123 Main St,Bismarck,ND,58501,2024-25,Owner,Full Page (10"×8"),Book,800,Yes,2024-09-10,2024-09-20,check,4421,Returning advertiser`;
+          const blob=new Blob([csv],{type:"text/csv"});
+          const url=URL.createObjectURL(blob);
+          const a=document.createElement("a");
+          a.href=url;a.download="dakota-grappler-import-template.csv";a.click();
+        }}>⬇️ Download Template CSV</Btn>
+        <div style={{fontSize:12,color:MUTED,marginTop:6}}>Fill this out in Excel or Google Sheets, then save as CSV and upload below.</div>
+      </div>
+      <div style={{marginBottom:"1rem"}}>
+        <div style={{fontWeight:600,color:NAVY,fontSize:14,marginBottom:8}}>Step 2 — Upload your filled CSV</div>
+        <Btn small color="light" onClick={()=>fileRef.current.click()}>📁 Choose CSV File</Btn>
+        <input ref={fileRef} type="file" accept=".csv" style={{display:"none"}} onChange={handleFile}/>
+      </div>
+      {error&&<InfoBox color="red">⚠️ {error}</InfoBox>}
+      {preview.length>0&&<div>
+        <div style={{fontWeight:600,color:NAVY,fontSize:14,marginBottom:8}}>Step 3 — Preview ({preview.length} advertisers found)</div>
+        <div style={{background:LIGHT_BG,borderRadius:8,overflow:"auto",maxHeight:240,marginBottom:"1rem"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:500}}>
+            <thead><tr style={{background:NAVY,color:WHITE}}>{["Business","Contact","Season","Ad Size","Amount","Paid"].map(h=><th key={h} style={{padding:"7px 10px",textAlign:"left",fontWeight:600}}>{h}</th>)}</tr></thead>
+            <tbody>{preview.map((r,i)=><tr key={i} style={{background:i%2===0?WHITE:LIGHT_BG,borderBottom:`1px solid ${BORDER}`}}>
+              <td style={{padding:"6px 10px",color:NAVY,fontWeight:500}}>{r.business||r["business name"]}</td>
+              <td style={{padding:"6px 10px",color:MUTED}}>{r.contact||r["contact name"]}</td>
+              <td style={{padding:"6px 10px",color:MUTED}}>{r.season}</td>
+              <td style={{padding:"6px 10px",color:MUTED}}>{r["ad size"]||r.adsize}</td>
+              <td style={{padding:"6px 10px",color:MUTED}}>${r.amount}</td>
+              <td style={{padding:"6px 10px"}}>{(r.paid||"").toLowerCase()==="yes"?<Badge text="Yes" color="green"/>:<Badge text="No" color="orange"/>}</td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <Btn full color="light" onClick={()=>{setPreview([]);setShowForm(false);}}>Cancel</Btn>
+          <Btn full color="green" onClick={doImport}>✓ Import {preview.length} Advertisers</Btn>
+        </div>
+      </div>}
+    </Modal>}
+  </div>;
+}
 function BookLibrary(){
   const [books,setBooks]=useState(INIT_BOOKS);
   const [sellModal,setSellModal]=useState(null);
