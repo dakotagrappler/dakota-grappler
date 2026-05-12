@@ -949,7 +949,14 @@ function EventSale({products}){
 }
 
 function Mileage({user}){
-  const [logs,setLogs]=useState(INIT_MILES);
+  const [logs,setLogs]=useState([]);
+useEffect(()=>{
+  const load=async()=>{
+    const {data,error}=await supabase.from('mileage').select('*').order('date',{ascending:false});
+    if(data)setLogs(data.map(r=>({id:r.id,user:r.user_name,date:r.date,miles:r.miles,note:r.note})));
+  };
+  load();
+},[]);
   const [filter,setFilter]=useState(user.role==="salesperson"?user.name:"All");
   const [showForm,setShowForm]=useState(false);
   const [f,setF]=useState({user:user.name,date:new Date().toISOString().slice(0,10),miles:"",note:""});
@@ -968,15 +975,17 @@ function Mileage({user}){
     <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,overflowX:"auto"}}>
       <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,minWidth:380}}>
         <thead><tr style={{background:NAVY,color:WHITE}}>{["Date","Person","Miles","Purpose",""].map(h=><th key={h} style={{padding:"10px 12px",textAlign:h==="Miles"?"right":"left",fontWeight:600}}>{h}</th>)}</tr></thead>
-        <tbody>{filtered.map((l,i)=><tr key={l.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}><td style={{padding:"9px 12px",color:MUTED}}>{l.date}</td><td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{l.user}</td><td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>{l.miles}</td><td style={{padding:"9px 12px",color:MUTED}}>{l.note}</td><td style={{padding:"9px 12px"}}><Btn small color="red" onClick={()=>{if(window.confirm("Delete this trip log?"))setLogs(prev=>prev.filter(x=>x.id!==l.id));}}>🗑</Btn></td></tr>)}</tbody>
+        <tbody>{filtered.map((l,i)=><tr key={l.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}><td style={{padding:"9px 12px",color:MUTED}}>{l.date}</td><td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{l.user}</td><td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>{l.miles}</td><td style={{padding:"9px 12px",color:MUTED}}>{l.note}</td><td style={{padding:"9px 12px"}}><Btn small color="red" onClick={()=>{if(window.confirm("Delete this trip log?")){await supabase.from('mileage').delete().eq('id',l.id);setLogs(prev=>prev.filter(x=>x.id!==l.id));}}}>🗑</Btn></td></tr>)}</tbody>
       </table>
     </div>
     {showForm&&<Modal title="Log Trip" onClose={()=>setShowForm(false)}>
       {user.role==="owner"&&<Sel label="Person" value={f.user} onChange={v=>set("user",v)} options={USERS.map(u=>u.name)}/>}
       <DatePicker label="Date" value={f.date} onChange={v=>set("date",v)}/>
       <Inp label="Miles" value={f.miles} onChange={v=>set("miles",v)} type="number" placeholder="0"/>
-      <Inp label="Destination / Purpose" value={f.note} onChange={v=>set("note",v)} placeholder="e.g. Bismarck Hardware visit"/>
-      <div style={{display:"flex",gap:8,marginTop:"1rem"}}><Btn full color="light" onClick={()=>setShowForm(false)}>Cancel</Btn><Btn full onClick={()=>{if(!f.miles)return;setLogs(p=>[{...f,id:Date.now(),miles:Number(f.miles)},...p]);setShowForm(false);}}>Save Trip</Btn></div>
+      <Inp label="Destination / Purpose" value={f.note} onChange={v=>set("note",v)} placeholder="e.g. Bismarck Hardware visit"/>const {data}=await supabase.from('mileage').insert({user_name:f.user,date:f.date,miles:Number(f.miles),note:f.note}).select();
+if(data)setLogs(p=>[{id:data[0].id,user:f.user,date:f.date,miles:Number(f.miles),note:f.note},...p]);
+setShowForm(false);
+      <div style={{display:"flex",gap:8,marginTop:"1rem"}}><Btn full color="light" onClick={()=>setShowForm(false)}>Cancel</Btn><Btn full onClick={()=>{if(!f.miles)return;}}>Save Trip</Btn></div>
     </Modal>}
   </div>;
 }
