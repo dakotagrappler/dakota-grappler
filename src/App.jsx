@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { supabase } from './supabase'
 
 const NAVY="#1a2744",GOLD="#c8960c",GOLD_LIGHT="#f5c842",WHITE="#ffffff",LIGHT_BG="#f4f6fa",BORDER="#dde2ef",RED="#c0392b",GREEN="#1a7a4a",MUTED="#6b7a99";
 
@@ -490,8 +491,68 @@ function Advertisers({advertisers,setAdvertisers,salespeople,user,seasons,setSea
   const [selected,setSelected]=useState(null);
   const [invoiceView,setInvoiceView]=useState(null);
   const filtered=advertisers.filter(a=>a.season===season).filter(a=>{if(filter==="paid")return a.paid;if(filter==="unpaid")return!a.paid;if(filter==="overdue")return a.overdue;if(filter==="newad")return a.newAd;if(filter==="newadv")return a.newAdvertiser;if(filter==="samead")return a.sameAd;return true;}).sort((a,b)=>{if(sort==="business")return a.business.localeCompare(b.business);if(sort==="amount")return b.totalAmount-a.totalAmount;if(sort==="salesperson")return a.salesperson.localeCompare(b.salesperson);if(sort==="date")return a.dateSale.localeCompare(b.dateSale);return 0;});
-  const save=adv=>{setAdvertisers(prev=>editing?prev.map(a=>a.id===adv.id?adv:a):[...prev,adv]);setShowForm(false);setEditing(null);};
-  const markPaid=id=>setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,paid:true,datePaid:new Date().toISOString().slice(0,10),overdue:false}:a));
+  const save=async adv=>{
+  try{
+    // Save or update the advertiser contact info
+    let advertiserId;
+    if(editing){
+      const {data}=await supabase.from('advertisers').update({
+        business:adv.business,contact:adv.contact,email:adv.email,
+        phone:adv.phone,address:adv.address,city:adv.city,state:adv.state,
+        zip:adv.zip,notes:adv.notes,ad_photo:adv.adPhoto,last_year_photo:adv.lastYearPhoto
+      }).eq('id',adv.advertiser_id||adv.id).select();
+      advertiserId=adv.advertiser_id||adv.id;
+    } else {
+      const {data}=await supabase.from('advertisers').insert({
+        business:adv.business,contact:adv.contact,email:adv.email,
+        phone:adv.phone,address:adv.address,city:adv.city,state:adv.state,
+        zip:adv.zip,notes:adv.notes,ad_photo:adv.adPhoto,last_year_photo:adv.lastYearPhoto
+      }).select();
+      advertiserId=data[0].id;
+    }
+    // Save the season record
+    const seasonData={
+      advertiser_id:advertiserId,season:adv.season,salesperson:adv.salesperson,
+      paid:adv.paid,date_sale:adv.dateSale||null,date_paid:adv.datePaid||null,
+      pay_method:adv.payMethod,check_num:adv.checkNum,new_ad:adv.newAd,
+      new_advertiser:adv.newAdvertiser,same_ad:adv.sameAd,overdue:adv.overdue,
+      signature:adv.signature,total_amount:adv.totalAmount
+    };
+    let seasonId;
+    if(editing){
+      await supabase.from('advertiser_seasons').update(seasonData).eq('id',adv.id);
+      seasonId=adv.id;
+    } else {
+      const {data}=await supabase.from('advertiser_seasons').insert(seasonData).select();
+      seasonId=data[0].id;
+    }
+    // Save line items
+    await supabase.from('line_items').delete().eq('advertiser_season_id',seasonId);
+    await supabase.from('line_items').insert(adv.lineItems.map(li=>({
+      advertiser_season_id:seasonId,ad_size:li.adSize,ad_type:li.adType,
+      base_price:li.basePrice,discount:li.discount,discount_type:li.discountType,
+      amount:li.amount,size:li.size,qty:li.qty
+    })));
+    // Reload advertisers
+    setAdvertisers(prev=>editing?prev.map(a=>a.id===adv.id?{...adv,advertiser_id:advertiserId}:a):[...prev,{...adv,id:seasonId,advertiser_id:advertiserId}]);
+    setShowForm(false);setEditing(null);
+  } catch(err){
+    console.error(err);
+    alert("Error saving advertiser. Please try again.");
+  }
+};
+  const markPaid=async id=>{
+  await supabase.from('advertiser_seasons').update({paid:true,date_paid:new Date().toISOString().slice(0,10),overdue:false}).eq('id',id);
+  setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,paid:true,datePaid:new Date().toISOString().slice(0,10),overdue:false}:a));
+};
+const unmarkPaid=async id=>{
+  await supabase.from('advertiser_seasons').update({paid:false,date_paid:null,overdue:false}).eq('id',id);
+  setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,paid:false,datePaid:"",overdue:false}:a));
+};
+const clearNewAd=async id=>{
+  await supabase.from('advertiser_seasons').update({new_ad:false}).eq('id',id);
+  setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,newAd:false}:a));
+};
   const unmarkPaid=id=>setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,paid:false,datePaid:"",overdue:false}:a));
   const clearNewAd=id=>setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,newAd:false}:a));
   return <div>
@@ -522,8 +583,11 @@ function Advertisers({advertisers,setAdvertisers,salespeople,user,seasons,setSea
             <Btn small onClick={()=>setInvoiceView(a)}>Invoice</Btn>
             {!a.paid&&<Btn small color="green" onClick={()=>markPaid(a.id)}>✓ Pay</Btn>}
             {a.paid&&<Btn small color="light" onClick={()=>unmarkPaid(a.id)}>↩ Unpay</Btn>}
-           {a.newAd&&<Btn small color="red" onClick={()=>clearNewAd(a.id)}>Clear</Btn>}
-<Btn small color="red" onClick={()=>{if(window.confirm(`Delete ${a.business}?`))setAdvertisers(prev=>prev.filter(x=>x.id!==a.id));}}>🗑</Btn>
+           {a.newAd&&<Btn small color="red" onClick={()=>clearNewAd(a.id)}>Clear</Btn>}if(window.confirm(`Delete ${a.business}?`)){
+  await supabase.from('advertiser_seasons').delete().eq('id',a.id);
+  setAdvertisers(prev=>prev.filter(x=>x.id!==a.id));
+}
+<Btn small color="red" onClick={()=>{;}}>🗑</Btn>
           </div></td>
         </tr>)}</tbody>
       </table>
@@ -1012,7 +1076,53 @@ function Settings({salespeople,setSalespeople}){
 export default function App(){
   const [currentUser,setCurrentUser]=useState(null);
   const [active,setActive]=useState("dashboard");
-  const [advertisers,setAdvertisers]=useState(INIT_ADV);
+  const [advertisers,setAdvertisers]=useState([]);
+const [loading,setLoading]=useState(true);
+
+useEffect(()=>{
+  const loadAdvertisers=async()=>{
+    const {data,error}=await supabase.from('advertiser_seasons').select(`
+      *,
+      advertiser:advertisers(*),
+      line_items(*)
+    `);
+    if(error){console.error(error);setLoading(false);return;}
+    if(data){
+      const mapped=data.map(r=>({
+        id:r.id,
+        business:r.advertiser?.business||"",
+        contact:r.advertiser?.contact||"",
+        email:r.advertiser?.email||"",
+        phone:r.advertiser?.phone||"",
+        address:r.advertiser?.address||"",
+        city:r.advertiser?.city||"",
+        state:r.advertiser?.state||"ND",
+        zip:r.advertiser?.zip||"",
+        season:r.season||"",
+        salesperson:r.salesperson||"",
+        lineItems:r.line_items||[],
+        totalAmount:r.total_amount||0,
+        paid:r.paid||false,
+        dateSale:r.date_sale||"",
+        datePaid:r.date_paid||"",
+        payMethod:r.pay_method||"",
+        checkNum:r.check_num||"",
+        newAd:r.new_ad||false,
+        newAdvertiser:r.new_advertiser||false,
+        sameAd:r.same_ad||false,
+        overdue:r.overdue||false,
+        notes:r.advertiser?.notes||"",
+        signature:r.signature||null,
+        adPhoto:r.advertiser?.ad_photo||null,
+        lastYearPhoto:r.advertiser?.last_year_photo||null,
+        history:[],
+      }));
+      setAdvertisers(mapped);
+    }
+    setLoading(false);
+  };
+  loadAdvertisers();
+},[]);
   const [salespeople,setSalespeople]=useState(INIT_SP);
   const [seasons,setSeasons]=useState(DEFAULT_SEASONS);
   if(!currentUser)return <Login onLogin={u=>{setCurrentUser(u);setActive("dashboard");}}/>;
