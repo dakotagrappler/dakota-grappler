@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { supabase } from './supabase'
 
 const NAVY="#1a2744",GOLD="#c8960c",GOLD_LIGHT="#f5c842",WHITE="#ffffff",LIGHT_BG="#f4f6fa",BORDER="#dde2ef",RED="#c0392b",GREEN="#1a7a4a",MUTED="#6b7a99";
@@ -12,31 +12,17 @@ const AD_SIZES=[{id:1,name:'1/24 Page (3.5"×0.75")',price:60},{id:2,name:'1/16 
 const RANKINGS=["SD Boys Class A","SD Boys Class B","SD Girls","ND Boys Class A","ND Boys Class B","ND Girls Class A","ND Girls Class B"];
 const SHIRT_SIZES=["SM","MD","LG","XL","XXL","SO"];
 const PRODUCT_OPTIONS=["Book (Digital)","Book (Print)","T-Shirt"];
-const ALL_ITEM_OPTIONS=[
-  {value:"__ad__",label:"── Ad Sizes ──",disabled:true},
-  ...AD_SIZES.map(a=>({value:a.name,label:a.name,disabled:false})),
-  {value:"__prod__",label:"── Products ──",disabled:true},
-  ...PRODUCT_OPTIONS.map(n=>({value:n,label:n,disabled:false})),
-];
+const ALL_ITEM_OPTIONS=[{value:"__ad__",label:"── Ad Sizes ──",disabled:true},...AD_SIZES.map(a=>({value:a.name,label:a.name,disabled:false})),{value:"__prod__",label:"── Products ──",disabled:true},...PRODUCT_OPTIONS.map(n=>({value:n,label:n,disabled:false}))];
 const PRODUCT_PRICES={"Book (Digital)":20,"Book (Print)":30,"T-Shirt":25};
-const US_STATES=["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
-
-const INIT_ADV=[
-  {id:1,business:"Bismarck Hardware Co.",contact:"Tom Fischer",email:"tom@bisco.com",phone:"701-555-0101",address:"123 Main St",city:"Bismarck",state:"ND",zip:"58501",season:"2024-25",salesperson:"Mike R.",lineItems:[{id:1,adSize:'Full Page (10"×8")',adType:"Book",basePrice:800,discount:0,discountType:"$",amount:800,size:"",qty:1}],totalAmount:800,paid:true,dateSale:"2024-09-10",datePaid:"2024-09-20",payMethod:"check",checkNum:"4421",newAd:false,newAdvertiser:false,sameAd:true,overdue:false,notes:"Returning 5 years",adPhoto:null,lastYearPhoto:null,history:["2023-24","2022-23"]},
-  {id:2,business:"Fargo Sports Medicine",contact:"Sara Holm",email:"sara@fargosm.com",phone:"701-555-0202",address:"456 Oak Ave",city:"Fargo",state:"ND",zip:"58102",season:"2024-25",salesperson:"Mike R.",lineItems:[{id:1,adSize:'1/2 Page (5.0"×8.0")',adType:"Book",basePrice:350,discount:0,discountType:"$",amount:350,size:"",qty:1},{id:2,adSize:"Rankings Ad - Season",adType:"Rankings - SD Boys A",basePrice:750,discount:50,discountType:"$",amount:700,size:"",qty:1}],totalAmount:1050,paid:false,dateSale:"2024-09-15",datePaid:"",payMethod:"",checkNum:"",newAd:true,newAdvertiser:false,sameAd:false,overdue:true,notes:"New ad design this year",adPhoto:null,lastYearPhoto:null,history:["2023-24"]},
-  {id:3,business:"Dakota Wrestling Club",contact:"Jim Strand",email:"jim@dakotawc.com",phone:"605-555-0303",address:"789 Pine Rd",city:"Aberdeen",state:"SD",zip:"57401",season:"2024-25",salesperson:"Owner",lineItems:[{id:1,adSize:'Business Card (3.5"×2")',adType:"Book",basePrice:100,discount:0,discountType:"$",amount:100,size:"",qty:1}],totalAmount:100,paid:true,dateSale:"2024-08-30",datePaid:"2024-09-05",payMethod:"cash",checkNum:"",newAd:false,newAdvertiser:false,sameAd:true,overdue:false,notes:"",adPhoto:null,lastYearPhoto:null,history:["2023-24","2022-23"]},
-  {id:4,business:"Rapid City Chiro",contact:"Dr. Anne Wells",email:"anne@rcchiro.com",phone:"605-555-0404",address:"321 Elm St",city:"Rapid City",state:"SD",zip:"57701",season:"2024-25",salesperson:"Jess T.",lineItems:[{id:1,adSize:"Rankings Ad - Season",adType:"Rankings - ND Boys A",basePrice:750,discount:0,discountType:"$",amount:750,size:"",qty:1},{id:2,adSize:"Website Ad - Small",adType:"Website",basePrice:60,discount:0,discountType:"$",amount:60,size:"",qty:1}],totalAmount:810,paid:false,dateSale:"2024-10-01",datePaid:"",payMethod:"",checkNum:"",newAd:false,newAdvertiser:true,sameAd:false,overdue:true,notes:"Full season ranking + website",adPhoto:null,lastYearPhoto:null,history:[]},
-];
-const INIT_SP=[{id:1,name:"Owner",commission:0},{id:2,name:"Mike R.",commission:10},{id:3,name:"Jess T.",commission:8}];
-const INIT_MILES=[{id:1,user:"Owner",date:"2024-09-10",miles:42,note:"Bismarck Hardware visit"},{id:2,user:"Mike R.",date:"2024-09-12",miles:65,note:"Fargo Sports Medicine + Rapid City Chiro"},{id:3,user:"Owner",date:"2024-09-18",miles:28,note:"Downtown advertiser run"}];
-const INIT_BOOKS=[{id:1,season:"2024-25",name:"Dakota Grappler Preseason Book 2024-25",pages:198,uploaded:"2024-10-01",file:null},{id:2,season:"2023-24",name:"Dakota Grappler Preseason Book 2023-24",pages:192,uploaded:"2023-10-05",file:null}];
 const INIT_PRODS=[{id:1,name:"Dakota Grappler Book (Digital)",price:20,type:"Book",sizes:[],photo:null},{id:2,name:"Dakota Grappler Book (Print)",price:30,type:"Book",sizes:[],photo:null},{id:3,name:"Dakota Grappler T-Shirt",price:25,type:"Apparel",sizes:SHIRT_SIZES,photo:null}];
+const INIT_BOOKS=[{id:1,season:"2024-25",name:"Dakota Grappler Preseason Book 2024-25",pages:198,uploaded:"2024-10-01",file:null},{id:2,season:"2023-24",name:"Dakota Grappler Preseason Book 2023-24",pages:192,uploaded:"2023-10-05",file:null}];
+const INIT_SP=[{id:1,name:"Owner",commission:0},{id:2,name:"Mike R.",commission:10},{id:3,name:"Jess T.",commission:8}];
 
 function Badge({text,color="navy"}){const s={navy:{bg:NAVY,col:GOLD_LIGHT},gold:{bg:GOLD,col:NAVY},red:{bg:"#fdecea",col:RED},green:{bg:"#eaf7ef",col:GREEN},orange:{bg:"#fff3e0",col:"#e65100"},blue:{bg:"#e8f0fe",col:"#1a56db"},purple:{bg:"#f3e8ff",col:"#7c3aed"}}[color]||{bg:NAVY,col:WHITE};return <span style={{background:s.bg,color:s.col,borderRadius:4,fontSize:11,fontWeight:600,padding:"2px 8px",whiteSpace:"nowrap"}}>{text}</span>;}
 function Btn({children,onClick,color="navy",small,full,disabled}){const bg={navy:NAVY,gold:GOLD,green:GREEN,red:RED,light:LIGHT_BG}[color]||NAVY;const col={gold:NAVY,light:NAVY}[color]||WHITE;return <button disabled={disabled} onClick={onClick} style={{background:bg,color:col,border:color==="light"?`1px solid ${BORDER}`:"none",borderRadius:7,padding:small?"5px 11px":"8px 16px",fontWeight:600,cursor:disabled?"not-allowed":"pointer",fontSize:small?12:13,width:full?"100%":"auto",opacity:disabled?.6:1}}>{children}</button>;}
 function Inp({label,value,onChange,type="text",placeholder,half}){return <div style={{marginBottom:10,flex:half?"1 1 48%":"1 1 100%"}}>{label&&<label style={{display:"block",color:MUTED,fontSize:12,marginBottom:3}}>{label}</label>}<input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder||label||""} style={{width:"100%",border:`1px solid ${BORDER}`,borderRadius:6,padding:"7px 10px",fontSize:13,boxSizing:"border-box",color:NAVY}}/></div>;}
 function Sel({label,value,onChange,options,half}){return <div style={{marginBottom:10,flex:half?"1 1 48%":"1 1 100%"}}>{label&&<label style={{display:"block",color:MUTED,fontSize:12,marginBottom:3}}>{label}</label>}<select value={value} onChange={e=>onChange(e.target.value)} style={{width:"100%",border:`1px solid ${BORDER}`,borderRadius:6,padding:"7px 10px",fontSize:13,color:NAVY,background:WHITE,boxSizing:"border-box"}}>{options.map(o=>typeof o==="string"?<option key={o} value={o}>{o}</option>:<option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}</select></div>;}
-function Modal({title,onClose,children,wide}){return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:"1rem"}} onClick={onClose}><div style={{background:WHITE,borderRadius:12,width:wide?640:420,maxWidth:"98vw",maxHeight:"92vh",display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"1.25rem 1.5rem 1rem",borderBottom:`1px solid ${BORDER}`,flexShrink:0}}><h3 style={{margin:0,color:NAVY,fontWeight:700,fontSize:16}}>{title}</h3><button onClick={onClose} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:MUTED,lineHeight:1}}>✕</button></div><div style={{overflowY:"auto",padding:"1.25rem 1.5rem 1.5rem",flex:1}}>{children}</div></div></div>;}
+function Modal({title,onClose,children,wide}){return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:"1rem"}} onClick={onClose}><div style={{background:WHITE,borderRadius:12,width:wide?640:420,maxWidth:"98vw",maxHeight:"92vh",display:"flex",flexDirection:"column",overflow:"hidden"}} onClick={e=>e.stopPropagation()}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"1.25rem 1.5rem 1rem",borderBottom:`1px solid ${BORDER}`,flexShrink:0}}><h3 style={{margin:0,color:NAVY,fontWeight:700,fontSize:16}}>{title}</h3><button onClick={onClose} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:MUTED,lineHeight:1}}>✕</button></div><div style={{overflowY:"auto",padding:"1.25rem 1.5rem 1.5rem",flex:1}}>{children}</div></div></div>;}
 function StatCard({label,value,sub,color}){return <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,padding:"1rem 1.25rem",borderTop:`3px solid ${color||GOLD}`}}><div style={{color:MUTED,fontSize:11,fontWeight:500,marginBottom:4}}>{label}</div><div style={{fontSize:22,fontWeight:700,color:NAVY}}>{value}</div>{sub&&<div style={{fontSize:11,color:MUTED,marginTop:2}}>{sub}</div>}</div>;}
 function InfoBox({children,color="blue"}){const s={blue:{bg:"#e8f0fe",border:"#93c5fd",col:"#1e3a8a"},yellow:{bg:"#fff8e1",border:"#ffe082",col:"#7d5a00"},orange:{bg:"#fff3e0",border:"#ffb74d",col:"#e65100"},green:{bg:"#eaf7ef",border:"#86efac",col:"#14532d"},red:{bg:"#fdecea",border:"#fca5a5",col:RED}}[color]||{bg:"#e8f0fe",border:"#93c5fd",col:"#1e3a8a"};return <div style={{background:s.bg,border:`1px solid ${s.border}`,borderRadius:7,padding:"9px 13px",fontSize:13,color:s.col,marginBottom:"1rem"}}>{children}</div>;}
 function PhotoUp({label,value,onChange}){const ref=useRef();return <div style={{marginBottom:10}}>{label&&<label style={{display:"block",color:MUTED,fontSize:12,marginBottom:3}}>{label}</label>}<div style={{display:"flex",alignItems:"center",gap:10}}>{value?<img src={value} style={{width:56,height:56,objectFit:"cover",borderRadius:6,border:`1px solid ${BORDER}`}}/>:<div style={{width:56,height:56,borderRadius:6,border:`2px dashed ${BORDER}`,display:"flex",alignItems:"center",justifyContent:"center",color:MUTED,fontSize:10}}>None</div>}<Btn small color="light" onClick={()=>ref.current.click()}>📷 {value?"Change":"Upload"}</Btn>{value&&<Btn small color="red" onClick={()=>onChange(null)}>✕</Btn>}</div><input ref={ref} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>onChange(ev.target.result);r.readAsDataURL(f);}}/></div>;}
@@ -81,7 +67,7 @@ function SeasonPicker({value,onChange,seasons,setSeasons}){
   const [newStart,setNewStart]=useState("");
   const addSeason=()=>{
     const yr=Number(newStart.trim());
-    if(!newStart.trim()||isNaN(yr)||yr<2000||yr>2200){alert("Please enter a valid 4-digit start year (e.g. 2026)");return;}
+    if(!newStart.trim()||isNaN(yr)||yr<2000||yr>2200){alert("Please enter a valid 4-digit start year");return;}
     const label=`${yr}-${String(yr+1).slice(2)}`;
     if(seasons.includes(label)){alert("That season already exists.");setAdding(false);setNewStart("");return;}
     const updated=[...seasons,label].sort((a,b)=>b.localeCompare(a));
@@ -104,74 +90,23 @@ function SeasonPicker({value,onChange,seasons,setSeasons}){
 function SignaturePad({value,onChange}){
   const canvasRef=useRef();
   const drawing=useRef(false);
-  const getPos=(e,canvas)=>{
-    const r=canvas.getBoundingClientRect();
-    const src=e.touches?e.touches[0]:e;
-    return{x:(src.clientX-r.left)*(canvas.width/r.width),y:(src.clientY-r.top)*(canvas.height/r.height)};
-  };
-  const start=e=>{
-    e.preventDefault();
-    drawing.current=true;
-    const c=canvasRef.current;
-    const ctx=c.getContext("2d");
-    const p=getPos(e,c);
-    ctx.beginPath();
-    ctx.moveTo(p.x,p.y);
-  };
-  const move=e=>{
-    e.preventDefault();
-    if(!drawing.current)return;
-    const c=canvasRef.current;
-    const ctx=c.getContext("2d");
-    const p=getPos(e,c);
-    ctx.lineWidth=2.5;
-    ctx.lineCap="round";
-    ctx.strokeStyle=NAVY;
-    ctx.lineTo(p.x,p.y);
-    ctx.stroke();
-  };
-  const end=e=>{
-    e.preventDefault();
-    drawing.current=false;
-    onChange(canvasRef.current.toDataURL());
-  };
-  const clear=()=>{
-    const c=canvasRef.current;
-    c.getContext("2d").clearRect(0,0,c.width,c.height);
-    onChange(null);
-  };
-  useEffect(()=>{
-    if(value&&canvasRef.current){
-      const img=new Image();
-      img.onload=()=>canvasRef.current.getContext("2d").drawImage(img,0,0);
-      img.src=value;
-    }
-  },[]);
+  const getPos=(e,canvas)=>{const r=canvas.getBoundingClientRect();const src=e.touches?e.touches[0]:e;return{x:(src.clientX-r.left)*(canvas.width/r.width),y:(src.clientY-r.top)*(canvas.height/r.height)};};
+  const start=e=>{e.preventDefault();drawing.current=true;const c=canvasRef.current;const ctx=c.getContext("2d");const p=getPos(e,c);ctx.beginPath();ctx.moveTo(p.x,p.y);};
+  const move=e=>{e.preventDefault();if(!drawing.current)return;const c=canvasRef.current;const ctx=c.getContext("2d");const p=getPos(e,c);ctx.lineWidth=2.5;ctx.lineCap="round";ctx.strokeStyle=NAVY;ctx.lineTo(p.x,p.y);ctx.stroke();};
+  const end=e=>{e.preventDefault();drawing.current=false;onChange(canvasRef.current.toDataURL());};
+  const clear=()=>{const c=canvasRef.current;c.getContext("2d").clearRect(0,0,c.width,c.height);onChange(null);};
+  useEffect(()=>{if(value&&canvasRef.current){const img=new Image();img.onload=()=>canvasRef.current.getContext("2d").drawImage(img,0,0);img.src=value;}},[]);
   return <div>
     <div style={{border:`1px solid ${BORDER}`,borderRadius:8,overflow:"hidden",background:"#fafbff",position:"relative"}}>
-      <canvas ref={canvasRef} width={560} height={120} style={{display:"block",width:"100%",height:120,cursor:"crosshair",touchAction:"none"}}
-        onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end}
-        onTouchStart={start} onTouchMove={move} onTouchEnd={end}/>
+      <canvas ref={canvasRef} width={560} height={120} style={{display:"block",width:"100%",height:120,cursor:"crosshair",touchAction:"none"}} onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end} onTouchStart={start} onTouchMove={move} onTouchEnd={end}/>
       {!value&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",color:"#c0c8d8",fontSize:13,fontStyle:"italic"}}>Sign here with finger or mouse</div>}
     </div>
-    <div style={{display:"flex",justifyContent:"flex-end",marginTop:4}}>
-      <button onClick={clear} style={{background:"none",border:"none",color:MUTED,fontSize:12,cursor:"pointer",textDecoration:"underline"}}>Clear signature</button>
-    </div>
+    <div style={{display:"flex",justifyContent:"flex-end",marginTop:4}}><button onClick={clear} style={{background:"none",border:"none",color:MUTED,fontSize:12,cursor:"pointer",textDecoration:"underline"}}>Clear signature</button></div>
   </div>;
 }
 
 function LineItemEditor({lineItems,setLineItems}){
-  const updateLine=(idx,key,val)=>{
-    setLineItems(prev=>{
-      const lines=[...prev];
-      lines[idx]={...lines[idx],[key]:val};
-      if(key==="adSize"){const ad=AD_SIZES.find(a=>a.name===val);const pp=PRODUCT_PRICES[val];lines[idx].basePrice=ad?ad.price:pp||0;lines[idx].size="";}
-      const bp=lines[idx].basePrice;
-      const disc=lines[idx].discountType==="%"?(bp*Number(lines[idx].discount||0)/100):Number(lines[idx].discount||0);
-      lines[idx].amount=Math.max(0,bp-disc);
-      return lines;
-    });
-  };
+  const updateLine=(idx,key,val)=>{setLineItems(prev=>{const lines=[...prev];lines[idx]={...lines[idx],[key]:val};if(key==="adSize"){const ad=AD_SIZES.find(a=>a.name===val);const pp=PRODUCT_PRICES[val];lines[idx].basePrice=ad?ad.price:pp||0;lines[idx].size="";}const bp=lines[idx].basePrice;const disc=lines[idx].discountType==="%"?(bp*Number(lines[idx].discount||0)/100):Number(lines[idx].discount||0);lines[idx].amount=Math.max(0,bp-disc);return lines;});};
   const addLine=()=>setLineItems(prev=>[...prev,{id:Date.now(),adSize:AD_SIZES[0].name,adType:"Book",basePrice:AD_SIZES[0].price,discount:0,discountType:"$",amount:AD_SIZES[0].price,size:"",qty:1}]);
   const removeLine=idx=>setLineItems(prev=>prev.filter((_,i)=>i!==idx));
   const total=lineItems.reduce((s,l)=>s+(l.amount*(l.qty||1)),0);
@@ -228,20 +163,10 @@ function AdStatusPicker({f,set}){
   return <div style={{marginBottom:12}}>
     <label style={{display:"block",color:MUTED,fontSize:12,marginBottom:6}}>Ad Status</label>
     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-      {opts.map(opt=>{
-        const active=f[opt.key];
-        return <button type="button" key={opt.key} onClick={()=>{
-          if(opt.key==="sameAd"){set("sameAd",!active);if(!active){set("newAd",false);set("newAdvertiser",false);}}
-          else if(opt.key==="newAd"){set("newAd",!active);if(!active)set("sameAd",false);}
-          else{set("newAdvertiser",!active);if(!active)set("sameAd",false);}
-        }} style={{display:"flex",flexDirection:"column",alignItems:"flex-start",padding:"9px 14px",borderRadius:8,border:active?`2px solid ${opt.color}`:`1px solid ${BORDER}`,background:active?opt.bg:WHITE,cursor:"pointer",minWidth:130,textAlign:"left"}}>
-          <div style={{display:"flex",alignItems:"center",gap:7}}>
-            <div style={{width:16,height:16,borderRadius:4,border:`2px solid ${active?opt.color:BORDER}`,background:active?opt.color:WHITE,display:"flex",alignItems:"center",justifyContent:"center"}}>{active&&<span style={{color:WHITE,fontSize:11,fontWeight:700}}>✓</span>}</div>
-            <span style={{fontWeight:600,fontSize:13,color:active?opt.color:NAVY}}>{opt.label}</span>
-          </div>
-          <div style={{fontSize:11,color:MUTED,marginTop:3,marginLeft:23}}>{opt.desc}</div>
-        </button>;
-      })}
+      {opts.map(opt=>{const active=f[opt.key];return <button type="button" key={opt.key} onClick={()=>{if(opt.key==="sameAd"){set("sameAd",!active);if(!active){set("newAd",false);set("newAdvertiser",false);}}else if(opt.key==="newAd"){set("newAd",!active);if(!active)set("sameAd",false);}else{set("newAdvertiser",!active);if(!active)set("sameAd",false);}}} style={{display:"flex",flexDirection:"column",alignItems:"flex-start",padding:"9px 14px",borderRadius:8,border:active?`2px solid ${opt.color}`:`1px solid ${BORDER}`,background:active?opt.bg:WHITE,cursor:"pointer",minWidth:130,textAlign:"left"}}>
+        <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:16,height:16,borderRadius:4,border:`2px solid ${active?opt.color:BORDER}`,background:active?opt.color:WHITE,display:"flex",alignItems:"center",justifyContent:"center"}}>{active&&<span style={{color:WHITE,fontSize:11,fontWeight:700}}>✓</span>}</div><span style={{fontWeight:600,fontSize:13,color:active?opt.color:NAVY}}>{opt.label}</span></div>
+        <div style={{fontSize:11,color:MUTED,marginTop:3,marginLeft:23}}>{opt.desc}</div>
+      </button>;})}
     </div>
     {f.sameAd&&<div style={{marginTop:8,background:"#eaf7ef",border:"1px solid #86efac",borderRadius:6,padding:"7px 12px",fontSize:12,color:"#14532d"}}>✓ Using last year's ad — no artwork update needed</div>}
     {f.newAd&&<div style={{marginTop:8,background:"#fff3e0",border:"1px solid #ffb74d",borderRadius:6,padding:"7px 12px",fontSize:12,color:"#e65100"}}>⚠️ New ad — remember to update artwork in the upcoming book</div>}
@@ -260,24 +185,9 @@ function AdvForm({existing,onSave,onClose,salespeople,user,seasons,allAdvertiser
   const [dupWarn,setDupWarn]=useState(false);
   const searchRef=useRef();
   const set=(k,v)=>setF(p=>({...p,[k]:v}));
-  useEffect(()=>{
-    if(!search.trim()||existing){setResults([]);setShowDrop(false);return;}
-    const q=search.toLowerCase();
-    const seen=new Set();
-    const found=[];
-    [...allAdvertisers].sort((a,b)=>b.season.localeCompare(a.season)).forEach(a=>{if(!seen.has(a.business.toLowerCase())&&a.business.toLowerCase().includes(q)){seen.add(a.business.toLowerCase());found.push(a);}});
-    setResults(found.slice(0,6));setShowDrop(found.length>0);
-  },[search]);
+  useEffect(()=>{if(!search.trim()||existing){setResults([]);setShowDrop(false);return;}const q=search.toLowerCase();const seen=new Set();const found=[];[...allAdvertisers].sort((a,b)=>b.season.localeCompare(a.season)).forEach(a=>{if(!seen.has(a.business.toLowerCase())&&a.business.toLowerCase().includes(q)){seen.add(a.business.toLowerCase());found.push(a);}});setResults(found.slice(0,6));setShowDrop(found.length>0);},[search]);
   useEffect(()=>{const h=e=>{if(searchRef.current&&!searchRef.current.contains(e.target))setShowDrop(false);};document.addEventListener("mousedown",h);return()=>document.removeEventListener("mousedown",h);},[]);
-  const pullAdvertiser=a=>{
-    const dup=allAdvertisers.find(x=>x.business.toLowerCase()===a.business.toLowerCase()&&x.season===f.season&&(!existing||x.id!==existing.id));
-    if(dup){setDupWarn(true);setShowDrop(false);setSearch(a.business);return;}
-    setDupWarn(false);
-    const refreshed=a.lineItems.map(li=>{const cur=AD_SIZES.find(s=>s.name===li.adSize);const pp=PRODUCT_PRICES[li.adSize];const bp=cur?cur.price:pp||li.basePrice;return{...li,id:Date.now()+Math.random(),basePrice:bp,discount:0,discountType:"$",amount:bp,size:"",qty:1};});
-    const hist=[...new Set([...(a.history||[]),a.season])].sort((x,y)=>y.localeCompare(x));
-    setF(prev=>({...a,id:undefined,season:prev.season,salesperson:prev.salesperson,paid:false,dateSale:new Date().toISOString().slice(0,10),datePaid:"",checkNum:"",payMethod:"check",newAd:false,newAdvertiser:false,sameAd:true,overdue:false,lastYearPhoto:a.adPhoto||a.lastYearPhoto||null,adPhoto:null,history:hist}));
-    setLineItems(refreshed);setPulledFrom(a);setSearch(a.business);setShowDrop(false);
-  };
+  const pullAdvertiser=a=>{const dup=allAdvertisers.find(x=>x.business.toLowerCase()===a.business.toLowerCase()&&x.season===f.season&&(!existing||x.id!==existing.id));if(dup){setDupWarn(true);setShowDrop(false);setSearch(a.business);return;}setDupWarn(false);const refreshed=a.lineItems.map(li=>{const cur=AD_SIZES.find(s=>s.name===li.adSize);const pp=PRODUCT_PRICES[li.adSize];const bp=cur?cur.price:pp||li.basePrice;return{...li,id:Date.now()+Math.random(),basePrice:bp,discount:0,discountType:"$",amount:bp,size:"",qty:1};});const hist=[...new Set([...(a.history||[]),a.season])].sort((x,y)=>y.localeCompare(x));setF(prev=>({...a,id:undefined,season:prev.season,salesperson:prev.salesperson,paid:false,dateSale:new Date().toISOString().slice(0,10),datePaid:"",checkNum:"",payMethod:"check",newAd:false,newAdvertiser:false,sameAd:true,overdue:false,lastYearPhoto:a.adPhoto||a.lastYearPhoto||null,adPhoto:null,history:hist}));setLineItems(refreshed);setPulledFrom(a);setSearch(a.business);setShowDrop(false);};
   const total=lineItems.reduce((s,l)=>s+(l.amount*(l.qty||1)),0);
   const handleSave=()=>onSave({...f,lineItems,totalAmount:total,id:existing?existing.id:Date.now(),overdue:!f.paid});
   return <div>
@@ -294,7 +204,7 @@ function AdvForm({existing,onSave,onClose,salespeople,user,seasons,allAdvertiser
         </div>}
       </div>
       {dupWarn&&<InfoBox color="red">⚠️ <strong>{search}</strong> already has a record in the {f.season} season.</InfoBox>}
-      {pulledFrom&&!dupWarn&&<InfoBox color="green">✓ Info pulled from <strong>{pulledFrom.season}</strong> — review and update below. Prices refreshed to current rates.</InfoBox>}
+      {pulledFrom&&!dupWarn&&<InfoBox color="green">✓ Info pulled from <strong>{pulledFrom.season}</strong> — review and update below.</InfoBox>}
       {!pulledFrom&&!dupWarn&&!search&&<div style={{fontSize:11,color:MUTED,marginTop:4}}>Search to auto-fill a returning advertiser, or leave blank to add a new one.</div>}
     </div>}
     {pulledFrom&&<div style={{background:"#fff8e1",border:"1px solid #ffe082",borderRadius:8,padding:"10px 14px",marginBottom:12,fontSize:13}}>
@@ -331,6 +241,41 @@ function AdvForm({existing,onSave,onClose,salespeople,user,seasons,allAdvertiser
   </div>;
 }
 
+function ImportAdvertisers({onImport,seasons}){
+  const [showForm,setShowForm]=useState(false);
+  const [preview,setPreview]=useState([]);
+  const [error,setError]=useState("");
+  const fileRef=useRef();
+  const handleFile=e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{try{const text=ev.target.result;const lines=text.split("\n").filter(l=>l.trim());const headers=lines[0].split(",").map(h=>h.trim().toLowerCase().replace(/"/g,""));const rows=lines.slice(1).map(line=>{const vals=line.split(",").map(v=>v.trim().replace(/"/g,""));const obj={};headers.forEach((h,i)=>obj[h]=vals[i]||"");return obj;}).filter(r=>r.business||r["business name"]);setPreview(rows);setError("");}catch(err){setError("Could not read file.");}};reader.readAsText(file);};
+  const doImport=()=>{const imported=preview.map((r,idx)=>({id:Date.now()+idx,business:r.business||r["business name"]||"",contact:r.contact||r["contact name"]||"",email:r.email||"",phone:r.phone||"",address:r.address||"",city:r.city||"",state:r.state||"ND",zip:r.zip||"",season:r.season||seasons[0]||getCurrentSeason(),salesperson:r.salesperson||"Owner",lineItems:[{id:1,adSize:r["ad size"]||AD_SIZES[0].name,adType:r["ad type"]||"Book",basePrice:Number(r.amount||0),discount:0,discountType:"$",amount:Number(r.amount||0),size:"",qty:1}],totalAmount:Number(r.amount||r.total||0),paid:(r.paid||"").toLowerCase()==="yes",dateSale:r["date sale"]||new Date().toISOString().slice(0,10),datePaid:r["date paid"]||"",payMethod:r["pay method"]||"check",checkNum:r["check #"]||"",newAd:false,newAdvertiser:false,sameAd:true,overdue:false,notes:r.notes||"",adPhoto:null,lastYearPhoto:null,history:[],signature:null}));onImport(imported);setShowForm(false);setPreview([]);alert(`✓ Successfully imported ${imported.length} advertisers!`);};
+  return <div style={{marginBottom:"1rem"}}>
+    <Btn color="light" onClick={()=>setShowForm(true)}>📥 Import from CSV</Btn>
+    {showForm&&<Modal title="Import Advertisers from CSV" onClose={()=>{setShowForm(false);setPreview([]);setError("");}} wide>
+      <div style={{marginBottom:"1rem"}}>
+        <div style={{fontWeight:600,color:NAVY,fontSize:14,marginBottom:8}}>Step 1 — Download the template</div>
+        <Btn small color="light" onClick={()=>{const csv=`Business Name,Contact Name,Email,Phone,Address,City,State,Zip,Season,Salesperson,Ad Size,Ad Type,Amount,Paid,Date Sale,Date Paid,Pay Method,Check #,Notes\nBismarck Hardware Co.,Tom Fischer,tom@bisco.com,701-555-0101,123 Main St,Bismarck,ND,58501,2024-25,Owner,Full Page (10"x8"),Book,800,Yes,2024-09-10,2024-09-20,check,4421,Returning advertiser`;const blob=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="dakota-grappler-import-template.csv";a.click();}}>⬇️ Download Template CSV</Btn>
+        <div style={{fontSize:12,color:MUTED,marginTop:6}}>Fill this out in Excel or Google Sheets, save as CSV, then upload below.</div>
+      </div>
+      <div style={{marginBottom:"1rem"}}>
+        <div style={{fontWeight:600,color:NAVY,fontSize:14,marginBottom:8}}>Step 2 — Upload your filled CSV</div>
+        <Btn small color="light" onClick={()=>fileRef.current.click()}>📁 Choose CSV File</Btn>
+        <input ref={fileRef} type="file" accept=".csv" style={{display:"none"}} onChange={handleFile}/>
+      </div>
+      {error&&<InfoBox color="red">⚠️ {error}</InfoBox>}
+      {preview.length>0&&<div>
+        <div style={{fontWeight:600,color:NAVY,fontSize:14,marginBottom:8}}>Step 3 — Preview ({preview.length} advertisers found)</div>
+        <div style={{background:LIGHT_BG,borderRadius:8,overflow:"auto",maxHeight:240,marginBottom:"1rem"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:500}}>
+            <thead><tr style={{background:NAVY,color:WHITE}}>{["Business","Contact","Season","Ad Size","Amount","Paid"].map(h=><th key={h} style={{padding:"7px 10px",textAlign:"left",fontWeight:600}}>{h}</th>)}</tr></thead>
+            <tbody>{preview.map((r,i)=><tr key={i} style={{background:i%2===0?WHITE:LIGHT_BG}}><td style={{padding:"6px 10px",color:NAVY,fontWeight:500}}>{r.business||r["business name"]}</td><td style={{padding:"6px 10px",color:MUTED}}>{r.contact||r["contact name"]}</td><td style={{padding:"6px 10px",color:MUTED}}>{r.season}</td><td style={{padding:"6px 10px",color:MUTED}}>{r["ad size"]}</td><td style={{padding:"6px 10px",color:MUTED}}>${r.amount}</td><td style={{padding:"6px 10px"}}>{(r.paid||"").toLowerCase()==="yes"?<Badge text="Yes" color="green"/>:<Badge text="No" color="orange"/>}</td></tr>)}</tbody>
+          </table>
+        </div>
+        <div style={{display:"flex",gap:8}}><Btn full color="light" onClick={()=>{setPreview([]);setShowForm(false);}}>Cancel</Btn><Btn full color="green" onClick={doImport}>✓ Import {preview.length} Advertisers</Btn></div>
+      </div>}
+    </Modal>}
+  </div>;
+}
+
 function InvoicePreview({a,onSigned}){
   const [sig,setSig]=useState(a.signature||null);
   const [saved,setSaved]=useState(!!a.signature);
@@ -345,20 +290,8 @@ function InvoicePreview({a,onSigned}){
       </div>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:"1rem",fontSize:13}}>
-      <div style={{background:LIGHT_BG,borderRadius:6,padding:"10px 12px"}}>
-        <div style={{color:MUTED,fontSize:10,marginBottom:3}}>BILL TO</div>
-        <div style={{fontWeight:600,color:NAVY}}>{a.business}</div>
-        <div style={{color:MUTED}}>{a.contact}</div>
-        <div style={{color:MUTED}}>{[a.address,a.city,a.state,a.zip].filter(Boolean).join(", ")}</div>
-        <div style={{color:MUTED}}>{a.email}</div>
-      </div>
-      <div style={{background:LIGHT_BG,borderRadius:6,padding:"10px 12px"}}>
-        <div style={{color:MUTED,fontSize:10,marginBottom:3}}>ACCOUNT REP</div>
-        <div style={{fontWeight:600,color:NAVY}}>{a.salesperson}</div>
-        <div style={{color:MUTED,marginTop:6,fontSize:10}}>STATUS</div>
-        <div style={{fontWeight:700,color:a.paid?GREEN:a.overdue?RED:GOLD,fontSize:13}}>{a.paid?"✓ PAID":a.overdue?"⚠️ OVERDUE":"OUTSTANDING"}</div>
-        {a.datePaid&&<div style={{color:MUTED,fontSize:11}}>Paid {a.datePaid}</div>}
-      </div>
+      <div style={{background:LIGHT_BG,borderRadius:6,padding:"10px 12px"}}><div style={{color:MUTED,fontSize:10,marginBottom:3}}>BILL TO</div><div style={{fontWeight:600,color:NAVY}}>{a.business}</div><div style={{color:MUTED}}>{a.contact}</div><div style={{color:MUTED}}>{[a.address,a.city,a.state,a.zip].filter(Boolean).join(", ")}</div><div style={{color:MUTED}}>{a.email}</div></div>
+      <div style={{background:LIGHT_BG,borderRadius:6,padding:"10px 12px"}}><div style={{color:MUTED,fontSize:10,marginBottom:3}}>ACCOUNT REP</div><div style={{fontWeight:600,color:NAVY}}>{a.salesperson}</div><div style={{color:MUTED,marginTop:6,fontSize:10}}>STATUS</div><div style={{fontWeight:700,color:a.paid?GREEN:a.overdue?RED:GOLD,fontSize:13}}>{a.paid?"✓ PAID":a.overdue?"⚠️ OVERDUE":"OUTSTANDING"}</div>{a.datePaid&&<div style={{color:MUTED,fontSize:11}}>Paid {a.datePaid}</div>}</div>
     </div>
     <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,marginBottom:"1rem"}}>
       <thead><tr style={{background:NAVY,color:WHITE}}><th style={{padding:"8px 12px",textAlign:"left",fontWeight:600}}>Description</th><th style={{padding:"8px 12px",textAlign:"right",fontWeight:600}}>Base</th><th style={{padding:"8px 12px",textAlign:"right",fontWeight:600}}>Discount</th><th style={{padding:"8px 12px",textAlign:"right",fontWeight:600}}>Total</th></tr></thead>
@@ -375,11 +308,7 @@ function InvoicePreview({a,onSigned}){
       <SignaturePad value={sig} onChange={v=>{setSig(v);setSaved(false);}}/>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8,flexWrap:"wrap",gap:6}}>
         <div style={{fontSize:11,color:MUTED}}>Signed: <strong>{a.contact}</strong> · {a.dateSale}</div>
-        <div style={{display:"flex",gap:6}}>
-          {sig&&!saved&&<Btn small color="green" onClick={saveSig}>✓ Save Signature</Btn>}
-          {sig&&<Btn small color="light" onClick={clearSig}>Clear</Btn>}
-          {saved&&<span style={{color:GREEN,fontSize:12,fontWeight:600}}>✓ Saved</span>}
-        </div>
+        <div style={{display:"flex",gap:6}}>{sig&&!saved&&<Btn small color="green" onClick={saveSig}>✓ Save Signature</Btn>}{sig&&<Btn small color="light" onClick={clearSig}>Clear</Btn>}{saved&&<span style={{color:GREEN,fontSize:12,fontWeight:600}}>✓ Saved</span>}</div>
       </div>
     </div>
     <div style={{background:NAVY,borderRadius:8,padding:"12px 16px",marginBottom:"1rem",textAlign:"center"}}>
@@ -393,7 +322,7 @@ function InvoicePreview({a,onSigned}){
     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
       <Btn full onClick={()=>alert("📧 Invoice emailed to "+a.email)}>📧 Email to {a.contact}</Btn>
       <Btn full color="gold" onClick={()=>window.print()}>🖨️ Print</Btn>
-      <Btn full color="green" onClick={()=>alert("💳 Opening Square payment link…")}>💳 Square</Btn>
+      <Btn full color="green" onClick={()=>window.open(`https://www.paypal.com/paypalme/dakotagrappler/${total}`,'_blank')}>🅿 PayPal ${total.toLocaleString()}</Btn>
     </div>
   </div>;
 }
@@ -401,25 +330,12 @@ function InvoicePreview({a,onSigned}){
 function Login({onLogin}){
   const [u,setU]=useState("");const [p,setP]=useState("");const [err,setErr]=useState("");
   const go=()=>{const f=USERS.find(x=>x.name===u&&x.password===p);f?onLogin(f):setErr("Invalid username or password.");};
-  return <div style={{minHeight:"100vh",background:NAVY,display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}>
-    <div style={{background:WHITE,borderRadius:14,padding:"2.5rem 2rem",width:340,maxWidth:"100%"}}>
-      <div style={{textAlign:"center",marginBottom:"1.75rem"}}><div style={{fontSize:42}}>🤼</div><div style={{fontWeight:800,fontSize:24,color:NAVY}}>DAKOTA GRAPPLER</div><div style={{color:GOLD,fontWeight:600,fontSize:13,marginTop:2}}>Business Management</div></div>
-      {err&&<InfoBox color="orange">⚠️ {err}</InfoBox>}
-      <Sel label="Select User" value={u} onChange={setU} options={[{value:"",label:"— Choose —"},...USERS.map(x=>({value:x.name,label:`${x.name} (${x.role})`}))]}/>
-      <Inp label="Password" type="password" value={p} onChange={setP} placeholder="Password"/>
-      <div style={{marginBottom:"1.25rem"}}><Btn full onClick={go}>Sign In</Btn></div>
-      <div style={{background:LIGHT_BG,borderRadius:8,padding:"10px 12px",fontSize:12,color:MUTED}}><strong style={{color:NAVY}}>Demo logins:</strong><br/>Owner: owner123 · Mike R.: mike123 · Jess T.: jess123</div>
-    </div>
-  </div>;
+  return <div style={{minHeight:"100vh",background:NAVY,display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}><div style={{background:WHITE,borderRadius:14,padding:"2.5rem 2rem",width:340,maxWidth:"100%"}}><div style={{textAlign:"center",marginBottom:"1.75rem"}}><div style={{fontSize:42}}>🤼</div><div style={{fontWeight:800,fontSize:24,color:NAVY}}>DAKOTA GRAPPLER</div><div style={{color:GOLD,fontWeight:600,fontSize:13,marginTop:2}}>Business Management</div></div>{err&&<InfoBox color="orange">⚠️ {err}</InfoBox>}<Sel label="Select User" value={u} onChange={setU} options={[{value:"",label:"— Choose —"},...USERS.map(x=>({value:x.name,label:`${x.name} (${x.role})`}))]}/><Inp label="Password" type="password" value={p} onChange={setP} placeholder="Password"/><div style={{marginBottom:"1.25rem"}}><Btn full onClick={go}>Sign In</Btn></div><div style={{background:LIGHT_BG,borderRadius:8,padding:"10px 12px",fontSize:12,color:MUTED}}><strong style={{color:NAVY}}>Demo logins:</strong><br/>Owner: owner123 · Mike R.: mike123 · Jess T.: jess123</div></div></div>;
 }
 
 function Sidebar({active,setActive,user,onLogout}){
   const items=[{id:"dashboard",icon:"📊",label:"Dashboard"},{id:"advertisers",icon:"🏢",label:"Advertisers"},{id:"invoices",icon:"🧾",label:"Invoices"},{id:"products",icon:"📦",label:"Products"},{id:"rankings",icon:"🏆",label:"Rankings Ads"},{id:"website",icon:"🌐",label:"Website Ads"},{id:"books",icon:"📚",label:"Book Library"},{id:"event",icon:"🛒",label:"Event Sale"},{id:"mileage",icon:"🚗",label:"Mileage"},{id:"reports",icon:"📈",label:"Reports"},...(user.role==="owner"?[{id:"settings",icon:"⚙️",label:"Settings"}]:[])];
-  return <div style={{width:190,minWidth:190,background:NAVY,minHeight:"100vh",display:"flex",flexDirection:"column"}}>
-    <div style={{padding:"1.2rem 1rem .75rem",borderBottom:"1px solid rgba(200,150,12,.25)"}}><div style={{color:GOLD_LIGHT,fontWeight:800,fontSize:15}}>🤼 DAKOTA</div><div style={{color:GOLD,fontWeight:800,fontSize:15}}>GRAPPLER</div><div style={{color:"rgba(255,255,255,.45)",fontSize:11,marginTop:3}}>{user.name} · {user.role}</div></div>
-    <nav style={{flex:1,padding:".4rem 0"}}>{items.map(it=><button key={it.id} onClick={()=>setActive(it.id)} style={{display:"flex",alignItems:"center",gap:9,width:"100%",background:active===it.id?"rgba(200,150,12,.18)":"transparent",border:"none",borderLeft:active===it.id?`3px solid ${GOLD}`:"3px solid transparent",color:active===it.id?GOLD_LIGHT:"rgba(255,255,255,.7)",padding:"9px 1rem",cursor:"pointer",fontSize:13,fontWeight:active===it.id?600:400,textAlign:"left"}}><span>{it.icon}</span>{it.label}</button>)}</nav>
-    <button onClick={onLogout} style={{margin:".75rem",background:"rgba(255,255,255,.08)",color:"rgba(255,255,255,.6)",border:"1px solid rgba(255,255,255,.12)",borderRadius:7,padding:"8px",fontSize:12,cursor:"pointer"}}>Sign Out</button>
-  </div>;
+  return <div style={{width:190,minWidth:190,background:NAVY,minHeight:"100vh",display:"flex",flexDirection:"column"}}><div style={{padding:"1.2rem 1rem .75rem",borderBottom:"1px solid rgba(200,150,12,.25)"}}><div style={{color:GOLD_LIGHT,fontWeight:800,fontSize:15}}>🤼 DAKOTA</div><div style={{color:GOLD,fontWeight:800,fontSize:15}}>GRAPPLER</div><div style={{color:"rgba(255,255,255,.45)",fontSize:11,marginTop:3}}>{user.name} · {user.role}</div></div><nav style={{flex:1,padding:".4rem 0"}}>{items.map(it=><button key={it.id} onClick={()=>setActive(it.id)} style={{display:"flex",alignItems:"center",gap:9,width:"100%",background:active===it.id?"rgba(200,150,12,.18)":"transparent",border:"none",borderLeft:active===it.id?`3px solid ${GOLD}`:"3px solid transparent",color:active===it.id?GOLD_LIGHT:"rgba(255,255,255,.7)",padding:"9px 1rem",cursor:"pointer",fontSize:13,fontWeight:active===it.id?600:400,textAlign:"left"}}><span>{it.icon}</span>{it.label}</button>)}</nav><button onClick={onLogout} style={{margin:".75rem",background:"rgba(255,255,255,.08)",color:"rgba(255,255,255,.6)",border:"1px solid rgba(255,255,255,.12)",borderRadius:7,padding:"8px",fontSize:12,cursor:"pointer"}}>Sign Out</button></div>;
 }
 
 function Dashboard({advertisers,user,seasons,setSeasons}){
@@ -441,13 +357,7 @@ function Dashboard({advertisers,user,seasons,setSeasons}){
       <h2 style={{color:NAVY,fontWeight:700,margin:0}}>Dashboard</h2>
       <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
         <SeasonPicker value={season} onChange={v=>{setSeason(v);setCmpSeason("");}} seasons={seasons} setSeasons={setSeasons}/>
-        <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <span style={{fontSize:12,color:MUTED,whiteSpace:"nowrap"}}>Compare to:</span>
-          <select value={cmpSeason} onChange={e=>setCmpSeason(e.target.value)} style={{border:`1px solid ${BORDER}`,borderRadius:6,padding:"6px 10px",fontSize:13,color:NAVY,background:WHITE}}>
-            <option value="">— none —</option>
-            {seasons.filter(s=>s!==season).map(s=><option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:12,color:MUTED,whiteSpace:"nowrap"}}>Compare to:</span><select value={cmpSeason} onChange={e=>setCmpSeason(e.target.value)} style={{border:`1px solid ${BORDER}`,borderRadius:6,padding:"6px 10px",fontSize:13,color:NAVY,background:WHITE}}><option value="">— none —</option>{seasons.filter(s=>s!==season).map(s=><option key={s} value={s}>{s}</option>)}</select></div>
       </div>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12,marginBottom:"1.5rem"}}>
@@ -460,12 +370,7 @@ function Dashboard({advertisers,user,seasons,setSeasons}){
         </div>
       ))}
     </div>
-    {cmp&&<div style={{background:"#e8f0fe",border:"1px solid #93c5fd",borderRadius:9,padding:"10px 16px",marginBottom:"1.25rem",fontSize:13,color:"#1e3a8a",display:"flex",gap:24,flexWrap:"wrap"}}>
-      <span><strong>{cmpSeason}:</strong> ${cmpTotal.toLocaleString()} total</span>
-      <span style={{color:GREEN}}>Collected: ${cmpPaid.toLocaleString()}</span>
-      <span style={{color:GOLD}}>Outstanding: ${(cmpTotal-cmpPaid).toLocaleString()}</span>
-      <span>{cmp.length} advertiser{cmp.length!==1?"s":""}</span>
-    </div>}
+    {cmp&&<div style={{background:"#e8f0fe",border:"1px solid #93c5fd",borderRadius:9,padding:"10px 16px",marginBottom:"1.25rem",fontSize:13,color:"#1e3a8a",display:"flex",gap:24,flexWrap:"wrap"}}><span><strong>{cmpSeason}:</strong> ${cmpTotal.toLocaleString()} total</span><span style={{color:GREEN}}>Collected: ${cmpPaid.toLocaleString()}</span><span style={{color:GOLD}}>Outstanding: ${(cmpTotal-cmpPaid).toLocaleString()}</span><span>{cmp.length} advertiser{cmp.length!==1?"s":""}</span></div>}
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
       <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,padding:"1rem"}}>
         <div style={{fontWeight:600,color:NAVY,marginBottom:10,fontSize:14}}>⚠️ Overdue</div>
@@ -492,76 +397,35 @@ function Advertisers({advertisers,setAdvertisers,salespeople,user,seasons,setSea
   const [invoiceView,setInvoiceView]=useState(null);
   const filtered=advertisers.filter(a=>a.season===season).filter(a=>{if(filter==="paid")return a.paid;if(filter==="unpaid")return!a.paid;if(filter==="overdue")return a.overdue;if(filter==="newad")return a.newAd;if(filter==="newadv")return a.newAdvertiser;if(filter==="samead")return a.sameAd;return true;}).sort((a,b)=>{if(sort==="business")return a.business.localeCompare(b.business);if(sort==="amount")return b.totalAmount-a.totalAmount;if(sort==="salesperson")return a.salesperson.localeCompare(b.salesperson);if(sort==="date")return a.dateSale.localeCompare(b.dateSale);return 0;});
   const save=async adv=>{
-  try{
-    // Save or update the advertiser contact info
-    let advertiserId;
-    if(editing){
-      const {data}=await supabase.from('advertisers').update({
-        business:adv.business,contact:adv.contact,email:adv.email,
-        phone:adv.phone,address:adv.address,city:adv.city,state:adv.state,
-        zip:adv.zip,notes:adv.notes,ad_photo:adv.adPhoto,last_year_photo:adv.lastYearPhoto
-      }).eq('id',adv.advertiser_id||adv.id).select();
-      advertiserId=adv.advertiser_id||adv.id;
-    } else {
-      const {data}=await supabase.from('advertisers').insert({
-        business:adv.business,contact:adv.contact,email:adv.email,
-        phone:adv.phone,address:adv.address,city:adv.city,state:adv.state,
-        zip:adv.zip,notes:adv.notes,ad_photo:adv.adPhoto,last_year_photo:adv.lastYearPhoto
-      }).select();
-      advertiserId=data[0].id;
-    }
-    // Save the season record
-    const seasonData={
-      advertiser_id:advertiserId,season:adv.season,salesperson:adv.salesperson,
-      paid:adv.paid,date_sale:adv.dateSale||null,date_paid:adv.datePaid||null,
-      pay_method:adv.payMethod,check_num:adv.checkNum,new_ad:adv.newAd,
-      new_advertiser:adv.newAdvertiser,same_ad:adv.sameAd,overdue:adv.overdue,
-      signature:adv.signature,total_amount:adv.totalAmount
-    };
-    let seasonId;
-    if(editing){
-      await supabase.from('advertiser_seasons').update(seasonData).eq('id',adv.id);
-      seasonId=adv.id;
-    } else {
-      const {data}=await supabase.from('advertiser_seasons').insert(seasonData).select();
-      seasonId=data[0].id;
-    }
-    // Save line items
-    await supabase.from('line_items').delete().eq('advertiser_season_id',seasonId);
-    await supabase.from('line_items').insert(adv.lineItems.map(li=>({
-      advertiser_season_id:seasonId,ad_size:li.adSize,ad_type:li.adType,
-      base_price:li.basePrice,discount:li.discount,discount_type:li.discountType,
-      amount:li.amount,size:li.size,qty:li.qty
-    })));
-    // Reload advertisers
-    setAdvertisers(prev=>editing?prev.map(a=>a.id===adv.id?{...adv,advertiser_id:advertiserId}:a):[...prev,{...adv,id:seasonId,advertiser_id:advertiserId}]);
-    setShowForm(false);setEditing(null);
-  } catch(err){
-    console.error(err);
-    alert("Error saving advertiser. Please try again.");
-  }
-};
-  const markPaid=async id=>{
-  await supabase.from('advertiser_seasons').update({paid:true,date_paid:new Date().toISOString().slice(0,10),overdue:false}).eq('id',id);
-  setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,paid:true,datePaid:new Date().toISOString().slice(0,10),overdue:false}:a));
-};
-const unmarkPaid=async id=>{
-  await supabase.from('advertiser_seasons').update({paid:false,date_paid:null,overdue:false}).eq('id',id);
-  setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,paid:false,datePaid:"",overdue:false}:a));
-};
-const clearNewAd=async id=>{
-  await supabase.from('advertiser_seasons').update({new_ad:false}).eq('id',id);
-  setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,newAd:false}:a));
-};
-  const unmarkPaid=id=>setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,paid:false,datePaid:"",overdue:false}:a));
-  const clearNewAd=id=>setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,newAd:false}:a));
+    try{
+      let advertiserId;
+      if(editing){
+        await supabase.from('advertisers').update({business:adv.business,contact:adv.contact,email:adv.email,phone:adv.phone,address:adv.address,city:adv.city,state:adv.state,zip:adv.zip,notes:adv.notes,ad_photo:adv.adPhoto,last_year_photo:adv.lastYearPhoto}).eq('id',adv.advertiser_id||adv.id);
+        advertiserId=adv.advertiser_id||adv.id;
+      }else{
+        const {data}=await supabase.from('advertisers').insert({business:adv.business,contact:adv.contact,email:adv.email,phone:adv.phone,address:adv.address,city:adv.city,state:adv.state,zip:adv.zip,notes:adv.notes,ad_photo:adv.adPhoto,last_year_photo:adv.lastYearPhoto}).select();
+        advertiserId=data[0].id;
+      }
+      const seasonData={advertiser_id:advertiserId,season:adv.season,salesperson:adv.salesperson,paid:adv.paid,date_sale:adv.dateSale||null,date_paid:adv.datePaid||null,pay_method:adv.payMethod,check_num:adv.checkNum,new_ad:adv.newAd,new_advertiser:adv.newAdvertiser,same_ad:adv.sameAd,overdue:adv.overdue,signature:adv.signature,total_amount:adv.totalAmount};
+      let seasonId;
+      if(editing){await supabase.from('advertiser_seasons').update(seasonData).eq('id',adv.id);seasonId=adv.id;}
+      else{const {data}=await supabase.from('advertiser_seasons').insert(seasonData).select();seasonId=data[0].id;}
+      await supabase.from('line_items').delete().eq('advertiser_season_id',seasonId);
+      await supabase.from('line_items').insert(adv.lineItems.map(li=>({advertiser_season_id:seasonId,ad_size:li.adSize,ad_type:li.adType,base_price:li.basePrice,discount:li.discount,discount_type:li.discountType,amount:li.amount,size:li.size,qty:li.qty})));
+      setAdvertisers(prev=>editing?prev.map(a=>a.id===adv.id?{...adv,advertiser_id:advertiserId}:a):[...prev,{...adv,id:seasonId,advertiser_id:advertiserId}]);
+      setShowForm(false);setEditing(null);
+    }catch(err){console.error(err);alert("Error saving. Please try again.");}
+  };
+  const markPaid=async id=>{await supabase.from('advertiser_seasons').update({paid:true,date_paid:new Date().toISOString().slice(0,10),overdue:false}).eq('id',id);setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,paid:true,datePaid:new Date().toISOString().slice(0,10),overdue:false}:a));};
+  const unmarkPaid=async id=>{await supabase.from('advertiser_seasons').update({paid:false,date_paid:null,overdue:false}).eq('id',id);setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,paid:false,datePaid:"",overdue:false}:a));};
+  const clearNewAd=async id=>{await supabase.from('advertiser_seasons').update({new_ad:false}).eq('id',id);setAdvertisers(prev=>prev.map(a=>a.id===id?{...a,newAd:false}:a));};
   return <div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem",flexWrap:"wrap",gap:8}}>
       <h2 style={{color:NAVY,fontWeight:700,margin:0}}>Advertisers</h2>
       <div style={{display:"flex",gap:8}}>
-  <ImportAdvertisers onImport={imported=>setAdvertisers(prev=>[...prev,...imported])} seasons={seasons} salespeople={salespeople}/>
-  <Btn onClick={()=>{setEditing(null);setShowForm(true);}}>+ Add Advertiser</Btn>
-</div>
+        <ImportAdvertisers onImport={imported=>setAdvertisers(prev=>[...prev,...imported])} seasons={seasons}/>
+        <Btn onClick={()=>{setEditing(null);setShowForm(true);}}>+ Add Advertiser</Btn>
+      </div>
     </div>
     <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:"1rem",alignItems:"center"}}>
       <SeasonPicker value={season} onChange={setSeason} seasons={seasons} setSeasons={setSeasons}/>
@@ -583,11 +447,8 @@ const clearNewAd=async id=>{
             <Btn small onClick={()=>setInvoiceView(a)}>Invoice</Btn>
             {!a.paid&&<Btn small color="green" onClick={()=>markPaid(a.id)}>✓ Pay</Btn>}
             {a.paid&&<Btn small color="light" onClick={()=>unmarkPaid(a.id)}>↩ Unpay</Btn>}
-           {a.newAd&&<Btn small color="red" onClick={()=>clearNewAd(a.id)}>Clear</Btn>}if(window.confirm(`Delete ${a.business}?`)){
-  await supabase.from('advertiser_seasons').delete().eq('id',a.id);
-  setAdvertisers(prev=>prev.filter(x=>x.id!==a.id));
-}
-<Btn small color="red" onClick={()=>{;}}>🗑</Btn>
+            {a.newAd&&<Btn small color="red" onClick={()=>clearNewAd(a.id)}>Clear</Btn>}
+            <Btn small color="red" onClick={async()=>{if(window.confirm(`Delete ${a.business}?`)){await supabase.from('advertiser_seasons').delete().eq('id',a.id);setAdvertisers(prev=>prev.filter(x=>x.id!==a.id));}}}>🗑</Btn>
           </div></td>
         </tr>)}</tbody>
       </table>
@@ -613,7 +474,7 @@ const clearNewAd=async id=>{
   </div>;
 }
 
-function Invoices({advertisers,seasons,setSeasons}){
+function Invoices({advertisers,setAdvertisers,seasons,setSeasons}){
   const [season,setSeason]=useState(seasons[0]||getCurrentSeason());
   const [sel,setSel]=useState(null);
   const [sf,setSf]=useState("all");
@@ -639,7 +500,7 @@ function Invoices({advertisers,seasons,setSeasons}){
             <Btn small color="green" onClick={()=>alert("📧 Invoice emailed to "+a.email)}>📧</Btn>
             <Btn small color="gold" onClick={()=>window.print()}>🖨️</Btn>
             {a.overdue&&<Btn small color="red" onClick={()=>alert("📧 Reminder sent to "+a.email)}>⚠️</Btn>}
-<Btn small color="red" onClick={()=>{if(window.confirm(`Delete invoice for ${a.business}?`))setAdvertisers(prev=>prev.filter(x=>x.id!==a.id));}}>🗑</Btn>
+            <Btn small color="red" onClick={async()=>{if(window.confirm(`Delete invoice for ${a.business}?`)){await supabase.from('advertiser_seasons').delete().eq('id',a.id);setAdvertisers(prev=>prev.filter(x=>x.id!==a.id));}}}>🗑</Btn>
           </div></td>
         </tr>)}</tbody>
       </table>
@@ -708,14 +569,7 @@ function Rankings(){
     <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,overflowX:"auto",marginBottom:"1rem"}}>
       <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,minWidth:480}}>
         <thead><tr style={{background:NAVY,color:WHITE}}>{["Business","Ranking","Type","Weeks","Amount","Status"].map(h=><th key={h} style={{padding:"10px 12px",textAlign:h==="Amount"?"right":"left",fontWeight:600}}>{h}</th>)}</tr></thead>
-        <tbody>{entries.map((e,i)=><tr key={e.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}>
-          <td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{e.business}</td>
-          <td style={{padding:"9px 12px",color:MUTED,fontSize:12}}>{e.ranking}</td>
-          <td style={{padding:"9px 12px"}}><Badge text={e.type} color={e.type==="Season"?"navy":"blue"}/></td>
-          <td style={{padding:"9px 12px",color:MUTED,fontSize:12}}>{e.weeks.length>0?e.weeks.join(", "):"Full Season"}</td>
-          <td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>${e.amount}</td>
-          <td style={{padding:"9px 12px"}}>{e.paid?<Badge text="Paid" color="green"/>:<Badge text="Unpaid" color="orange"/>}</td>
-        </tr>)}</tbody>
+        <tbody>{entries.map((e,i)=><tr key={e.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}><td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{e.business}</td><td style={{padding:"9px 12px",color:MUTED,fontSize:12}}>{e.ranking}</td><td style={{padding:"9px 12px"}}><Badge text={e.type} color={e.type==="Season"?"navy":"blue"}/></td><td style={{padding:"9px 12px",color:MUTED,fontSize:12}}>{e.weeks.length>0?e.weeks.join(", "):"Full Season"}</td><td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>${e.amount}</td><td style={{padding:"9px 12px"}}>{e.paid?<Badge text="Paid" color="green"/>:<Badge text="Unpaid" color="orange"/>}</td></tr>)}</tbody>
       </table>
     </div>
     <Btn onClick={()=>setShowForm(true)}>+ Add Rankings Ad</Btn>
@@ -742,11 +596,7 @@ function WebsiteAds(){
     <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,overflowX:"auto",marginBottom:"1rem"}}>
       <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,minWidth:400}}>
         <thead><tr style={{background:NAVY,color:WHITE}}>{["Business","Size","Months","Monthly","Total","Status"].map(h=><th key={h} style={{padding:"10px 12px",textAlign:["Monthly","Total"].includes(h)?"right":"left",fontWeight:600}}>{h}</th>)}</tr></thead>
-        <tbody>{ads.map((a,i)=><tr key={a.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}>
-          <td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{a.business}</td><td style={{padding:"9px 12px",color:MUTED}}>{a.size}</td><td style={{padding:"9px 12px",color:MUTED}}>{a.months}</td>
-          <td style={{padding:"9px 12px",textAlign:"right",color:MUTED}}>${a.price}/mo</td><td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>${a.price*a.months}</td>
-          <td style={{padding:"9px 12px"}}>{a.paid?<Badge text="Paid" color="green"/>:<Badge text="Unpaid" color="orange"/>}</td>
-        </tr>)}</tbody>
+        <tbody>{ads.map((a,i)=><tr key={a.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}><td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{a.business}</td><td style={{padding:"9px 12px",color:MUTED}}>{a.size}</td><td style={{padding:"9px 12px",color:MUTED}}>{a.months}</td><td style={{padding:"9px 12px",textAlign:"right",color:MUTED}}>${a.price}/mo</td><td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>${a.price*a.months}</td><td style={{padding:"9px 12px"}}>{a.paid?<Badge text="Paid" color="green"/>:<Badge text="Unpaid" color="orange"/>}</td></tr>)}</tbody>
       </table>
     </div>
     <Btn onClick={()=>setShowForm(true)}>+ Add Website Ad</Btn>
@@ -760,125 +610,7 @@ function WebsiteAds(){
     </Modal>}
   </div>;
 }
-function ImportAdvertisers({onImport,seasons,salespeople}){
-  const [showForm,setShowForm]=useState(false);
-  const [preview,setPreview]=useState([]);
-  const [error,setError]=useState("");
-  const fileRef=useRef();
 
-  const handleFile=e=>{
-    const file=e.target.files[0];
-    if(!file)return;
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      try{
-        const text=ev.target.result;
-        const lines=text.split("\n").filter(l=>l.trim());
-        const headers=lines[0].split(",").map(h=>h.trim().toLowerCase().replace(/"/g,""));
-        const rows=lines.slice(1).map(line=>{
-          const vals=line.split(",").map(v=>v.trim().replace(/"/g,""));
-          const obj={};
-          headers.forEach((h,i)=>obj[h]=vals[i]||"");
-          return obj;
-        }).filter(r=>r.business||r["business name"]);
-        setPreview(rows);
-        setError("");
-      }catch(err){
-        setError("Could not read file. Make sure it is a CSV file.");
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const doImport=()=>{
-    const imported=preview.map((r,idx)=>({
-      id:Date.now()+idx,
-      business:r.business||r["business name"]||"",
-      contact:r.contact||r["contact name"]||"",
-      email:r.email||"",
-      phone:r.phone||"",
-      address:r.address||"",
-      city:r.city||"",
-      state:r.state||"ND",
-      zip:r.zip||"",
-      season:r.season||seasons[0]||getCurrentSeason(),
-      salesperson:r.salesperson||"Owner",
-      lineItems:[{
-        id:1,
-        adSize:r["ad size"]||r.adsize||AD_SIZES[0].name,
-        adType:r["ad type"]||r.adtype||"Book",
-        basePrice:Number(r.amount||r["base price"]||0),
-        discount:0,
-        discountType:"$",
-        amount:Number(r.amount||0),
-        size:"",
-        qty:1
-      }],
-      totalAmount:Number(r.amount||r.total||0),
-      paid:(r.paid||"").toLowerCase()==="yes"||(r.paid||"").toLowerCase()==="true",
-      dateSale:r["date sale"]||r.datesale||r.date||new Date().toISOString().slice(0,10),
-      datePaid:r["date paid"]||r.datepaid||"",
-      payMethod:r["pay method"]||r.paymethod||r.payment||"check",
-      checkNum:r["check #"]||r.checknum||"",
-      newAd:false,
-      newAdvertiser:false,
-      sameAd:true,
-      overdue:false,
-      notes:r.notes||"",
-      adPhoto:null,
-      lastYearPhoto:null,
-      history:[],
-      signature:null,
-    }));
-    onImport(imported);
-    setShowForm(false);
-    setPreview([]);
-    alert(`✓ Successfully imported ${imported.length} advertisers!`);
-  };
-
-  return <div style={{marginBottom:"1rem"}}>
-    <Btn color="light" onClick={()=>setShowForm(true)}>📥 Import from CSV/Excel</Btn>
-    {showForm&&<Modal title="Import Advertisers from CSV" onClose={()=>{setShowForm(false);setPreview([]);setError("");}} wide>
-      <div style={{marginBottom:"1rem"}}>
-        <div style={{fontWeight:600,color:NAVY,fontSize:14,marginBottom:8}}>Step 1 — Download the template</div>
-        <Btn small color="light" onClick={()=>{
-          const csv=`Business Name,Contact Name,Email,Phone,Address,City,State,Zip,Season,Salesperson,Ad Size,Ad Type,Amount,Paid,Date Sale,Date Paid,Pay Method,Check #,Notes\nBismarck Hardware Co.,Tom Fischer,tom@bisco.com,701-555-0101,123 Main St,Bismarck,ND,58501,2024-25,Owner,Full Page (10"×8"),Book,800,Yes,2024-09-10,2024-09-20,check,4421,Returning advertiser`;
-          const blob=new Blob([csv],{type:"text/csv"});
-          const url=URL.createObjectURL(blob);
-          const a=document.createElement("a");
-          a.href=url;a.download="dakota-grappler-import-template.csv";a.click();
-        }}>⬇️ Download Template CSV</Btn>
-        <div style={{fontSize:12,color:MUTED,marginTop:6}}>Fill this out in Excel or Google Sheets, then save as CSV and upload below.</div>
-      </div>
-      <div style={{marginBottom:"1rem"}}>
-        <div style={{fontWeight:600,color:NAVY,fontSize:14,marginBottom:8}}>Step 2 — Upload your filled CSV</div>
-        <Btn small color="light" onClick={()=>fileRef.current.click()}>📁 Choose CSV File</Btn>
-        <input ref={fileRef} type="file" accept=".csv" style={{display:"none"}} onChange={handleFile}/>
-      </div>
-      {error&&<InfoBox color="red">⚠️ {error}</InfoBox>}
-      {preview.length>0&&<div>
-        <div style={{fontWeight:600,color:NAVY,fontSize:14,marginBottom:8}}>Step 3 — Preview ({preview.length} advertisers found)</div>
-        <div style={{background:LIGHT_BG,borderRadius:8,overflow:"auto",maxHeight:240,marginBottom:"1rem"}}>
-          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:500}}>
-            <thead><tr style={{background:NAVY,color:WHITE}}>{["Business","Contact","Season","Ad Size","Amount","Paid"].map(h=><th key={h} style={{padding:"7px 10px",textAlign:"left",fontWeight:600}}>{h}</th>)}</tr></thead>
-            <tbody>{preview.map((r,i)=><tr key={i} style={{background:i%2===0?WHITE:LIGHT_BG,borderBottom:`1px solid ${BORDER}`}}>
-              <td style={{padding:"6px 10px",color:NAVY,fontWeight:500}}>{r.business||r["business name"]}</td>
-              <td style={{padding:"6px 10px",color:MUTED}}>{r.contact||r["contact name"]}</td>
-              <td style={{padding:"6px 10px",color:MUTED}}>{r.season}</td>
-              <td style={{padding:"6px 10px",color:MUTED}}>{r["ad size"]||r.adsize}</td>
-              <td style={{padding:"6px 10px",color:MUTED}}>${r.amount}</td>
-              <td style={{padding:"6px 10px"}}>{(r.paid||"").toLowerCase()==="yes"?<Badge text="Yes" color="green"/>:<Badge text="No" color="orange"/>}</td>
-            </tr>)}</tbody>
-          </table>
-        </div>
-        <div style={{display:"flex",gap:8}}>
-          <Btn full color="light" onClick={()=>{setPreview([]);setShowForm(false);}}>Cancel</Btn>
-          <Btn full color="green" onClick={doImport}>✓ Import {preview.length} Advertisers</Btn>
-        </div>
-      </div>}
-    </Modal>}
-  </div>;
-}
 function BookLibrary(){
   const [books,setBooks]=useState(INIT_BOOKS);
   const [sellModal,setSellModal]=useState(null);
@@ -889,8 +621,7 @@ function BookLibrary(){
     <div style={{display:"grid",gap:12,marginBottom:"1rem"}}>{books.map(b=><div key={b.id} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,padding:"1rem 1.25rem"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
         <div><div style={{fontWeight:700,color:NAVY,fontSize:15}}>📘 {b.name}</div><div style={{color:MUTED,fontSize:12,marginTop:2}}>{b.pages} pages · Uploaded {b.uploaded}{b.file&&<span style={{color:GREEN}}> · ✓ PDF ready</span>}</div></div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn small color="green" onClick={()=>alert("📧 Enter email to send PDF")}>📧 Email</Btn>
-<Btn small color="red" onClick={()=>{if(window.confirm(`Delete ${b.name}?`))setBooks(prev=>prev.filter(x=>x.id!==b.id));}}>🗑</Btn></div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn small color="light">👁 View</Btn><Btn small onClick={()=>{setSale({buyer:"",email:"",price:"20",payment:"Cash"});setSellModal(b);}}>💰 Sell Digital</Btn><Btn small color="green" onClick={()=>alert("📧 Enter email to send PDF")}>📧 Email</Btn><Btn small color="red" onClick={()=>{if(window.confirm(`Delete ${b.name}?`))setBooks(prev=>prev.filter(x=>x.id!==b.id));}}>🗑</Btn></div>
       </div>
     </div>)}</div>
     <div style={{display:"flex",gap:8}}><Btn onClick={()=>fileRef.current.click()}>+ Upload Book PDF</Btn><input ref={fileRef} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;setBooks(p=>[{id:Date.now(),season:DEFAULT_SEASONS[0],name:f.name.replace(".pdf",""),pages:0,uploaded:new Date().toISOString().slice(0,10),file:f.name},...p]);}}/></div>
@@ -923,7 +654,7 @@ function EventSale({products}){
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
       <div><div style={{fontWeight:600,color:NAVY,marginBottom:10,fontSize:14}}>Products</div>
-        <div style={{display:"grid",gap:10}}>{products.map(p=><div key={p.id} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:9,padding:"12px 14px"}}>
+        <div style={{display:"grid",gap:10}}>{(products||INIT_PRODS).map(p=><div key={p.id} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:9,padding:"12px 14px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:p.sizes.length>0?8:0}}><div><div style={{fontWeight:600,color:NAVY,fontSize:13}}>{p.name}</div><div style={{fontWeight:700,color:GOLD,fontSize:15}}>${p.price}</div></div><Btn small onClick={()=>addToCart(p)}>+ Add</Btn></div>
           {p.sizes.length>0&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{p.sizes.map(sz=><button key={sz} onClick={()=>setSelSize(prev=>({...prev,[p.id]:sz}))} style={{background:selSize[p.id]===sz?NAVY:LIGHT_BG,color:selSize[p.id]===sz?WHITE:NAVY,border:`1px solid ${selSize[p.id]===sz?NAVY:BORDER}`,borderRadius:5,padding:"3px 10px",fontSize:12,cursor:"pointer",fontWeight:selSize[p.id]===sz?600:400}}>{sz}</button>)}</div>}
         </div>)}</div>
@@ -950,17 +681,17 @@ function EventSale({products}){
 
 function Mileage({user}){
   const [logs,setLogs]=useState([]);
-useEffect(()=>{
-  const load=async()=>{
-    const {data,error}=await supabase.from('mileage').select('*').order('date',{ascending:false});
-    if(data)setLogs(data.map(r=>({id:r.id,user:r.user_name,date:r.date,miles:r.miles,note:r.note})));
-  };
-  load();
-},[]);
   const [filter,setFilter]=useState(user.role==="salesperson"?user.name:"All");
   const [showForm,setShowForm]=useState(false);
   const [f,setF]=useState({user:user.name,date:new Date().toISOString().slice(0,10),miles:"",note:""});
   const set=(k,v)=>setF(p=>({...p,[k]:v}));
+  useEffect(()=>{
+    const load=async()=>{
+      const {data}=await supabase.from('mileage').select('*').order('date',{ascending:false});
+      if(data)setLogs(data.map(r=>({id:r.id,user:r.user_name,date:r.date,miles:r.miles,note:r.note})));
+    };
+    load();
+  },[]);
   const filtered=filter==="All"?logs:logs.filter(l=>l.user===filter);
   const total=filtered.reduce((s,l)=>s+Number(l.miles),0);
   return <div>
@@ -975,17 +706,29 @@ useEffect(()=>{
     <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,overflowX:"auto"}}>
       <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,minWidth:380}}>
         <thead><tr style={{background:NAVY,color:WHITE}}>{["Date","Person","Miles","Purpose",""].map(h=><th key={h} style={{padding:"10px 12px",textAlign:h==="Miles"?"right":"left",fontWeight:600}}>{h}</th>)}</tr></thead>
-        <tbody>{filtered.map((l,i)=><tr key={l.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}><td style={{padding:"9px 12px",color:MUTED}}>{l.date}</td><td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{l.user}</td><td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>{l.miles}</td><td style={{padding:"9px 12px",color:MUTED}}>{l.note}</td><td style={{padding:"9px 12px"}}><Btn small color="red" onClick={()=>{if(window.confirm("Delete this trip log?")){await supabase.from('mileage').delete().eq('id',l.id);setLogs(prev=>prev.filter(x=>x.id!==l.id));}}}>🗑</Btn></td></tr>)}</tbody>
+        <tbody>{filtered.map((l,i)=><tr key={l.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}>
+          <td style={{padding:"9px 12px",color:MUTED}}>{l.date}</td>
+          <td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{l.user}</td>
+          <td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>{l.miles}</td>
+          <td style={{padding:"9px 12px",color:MUTED}}>{l.note}</td>
+          <td style={{padding:"9px 12px"}}><Btn small color="red" onClick={async()=>{if(window.confirm("Delete this trip log?")){await supabase.from('mileage').delete().eq('id',l.id);setLogs(prev=>prev.filter(x=>x.id!==l.id));}}}>🗑</Btn></td>
+        </tr>)}</tbody>
       </table>
     </div>
     {showForm&&<Modal title="Log Trip" onClose={()=>setShowForm(false)}>
       {user.role==="owner"&&<Sel label="Person" value={f.user} onChange={v=>set("user",v)} options={USERS.map(u=>u.name)}/>}
       <DatePicker label="Date" value={f.date} onChange={v=>set("date",v)}/>
       <Inp label="Miles" value={f.miles} onChange={v=>set("miles",v)} type="number" placeholder="0"/>
-      <Inp label="Destination / Purpose" value={f.note} onChange={v=>set("note",v)} placeholder="e.g. Bismarck Hardware visit"/>const {data}=await supabase.from('mileage').insert({user_name:f.user,date:f.date,miles:Number(f.miles),note:f.note}).select();
-if(data)setLogs(p=>[{id:data[0].id,user:f.user,date:f.date,miles:Number(f.miles),note:f.note},...p]);
-setShowForm(false);
-      <div style={{display:"flex",gap:8,marginTop:"1rem"}}><Btn full color="light" onClick={()=>setShowForm(false)}>Cancel</Btn><Btn full onClick={()=>{if(!f.miles)return;}}>Save Trip</Btn></div>
+      <Inp label="Destination / Purpose" value={f.note} onChange={v=>set("note",v)} placeholder="e.g. Bismarck Hardware visit"/>
+      <div style={{display:"flex",gap:8,marginTop:"1rem"}}>
+        <Btn full color="light" onClick={()=>setShowForm(false)}>Cancel</Btn>
+        <Btn full onClick={async()=>{
+          if(!f.miles)return;
+          const {data}=await supabase.from('mileage').insert({user_name:f.user,date:f.date,miles:Number(f.miles),note:f.note}).select();
+          if(data)setLogs(p=>[{id:data[0].id,user:f.user,date:f.date,miles:Number(f.miles),note:f.note},...p]);
+          setShowForm(false);
+        }}>Save Trip</Btn>
+      </div>
     </Modal>}
   </div>;
 }
@@ -1001,13 +744,13 @@ function Reports({advertisers,salespeople,seasons,setSeasons}){
   ads.forEach(a=>a.lineItems.forEach(li=>{if(!bySize[li.adSize])bySize[li.adSize]={count:0,total:0};bySize[li.adSize].count++;bySize[li.adSize].total+=li.amount*(li.qty||1);}));
   return <div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem",flexWrap:"wrap",gap:8}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:"1rem"}}>
-  <h2 style={{color:NAVY,fontWeight:700,margin:0}}>Reports</h2>
-  <div style={{display:"flex",gap:8}}>
-    <SeasonPicker value={season} onChange={setSeason} seasons={seasons} setSeasons={setSeasons}/>
-    <Btn color="gold" onClick={()=>window.print()}>🖨️ Print / Save PDF</Btn>
-  </div>
-</div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",width:"100%",flexWrap:"wrap",gap:8}}>
+        <h2 style={{color:NAVY,fontWeight:700,margin:0}}>Reports</h2>
+        <div style={{display:"flex",gap:8}}>
+          <SeasonPicker value={season} onChange={setSeason} seasons={seasons} setSeasons={setSeasons}/>
+          <Btn color="gold" onClick={()=>window.print()}>🖨️ Print / Save PDF</Btn>
+        </div>
+      </div>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12,marginBottom:"1.5rem"}}>
       <StatCard label="Total Sales" value={`$${total.toLocaleString()}`} color={NAVY}/>
@@ -1086,68 +829,55 @@ export default function App(){
   const [currentUser,setCurrentUser]=useState(null);
   const [active,setActive]=useState("dashboard");
   const [advertisers,setAdvertisers]=useState([]);
-const [loading,setLoading]=useState(true);
-
-useEffect(()=>{
-  const loadAdvertisers=async()=>{
-    const {data,error}=await supabase.from('advertiser_seasons').select(`
-      *,
-      advertiser:advertisers(*),
-      line_items(*)
-    `);
-    if(error){console.error(error);setLoading(false);return;}
-    if(data){
-      const mapped=data.map(r=>({
-        id:r.id,
-        business:r.advertiser?.business||"",
-        contact:r.advertiser?.contact||"",
-        email:r.advertiser?.email||"",
-        phone:r.advertiser?.phone||"",
-        address:r.advertiser?.address||"",
-        city:r.advertiser?.city||"",
-        state:r.advertiser?.state||"ND",
-        zip:r.advertiser?.zip||"",
-        season:r.season||"",
-        salesperson:r.salesperson||"",
-        lineItems:r.line_items||[],
-        totalAmount:r.total_amount||0,
-        paid:r.paid||false,
-        dateSale:r.date_sale||"",
-        datePaid:r.date_paid||"",
-        payMethod:r.pay_method||"",
-        checkNum:r.check_num||"",
-        newAd:r.new_ad||false,
-        newAdvertiser:r.new_advertiser||false,
-        sameAd:r.same_ad||false,
-        overdue:r.overdue||false,
-        notes:r.advertiser?.notes||"",
-        signature:r.signature||null,
-        adPhoto:r.advertiser?.ad_photo||null,
-        lastYearPhoto:r.advertiser?.last_year_photo||null,
-        history:[],
-      }));
-      setAdvertisers(mapped);
-    }
-    setLoading(false);
-  };
-  loadAdvertisers();
-},[]);
   const [salespeople,setSalespeople]=useState(INIT_SP);
   const [seasons,setSeasons]=useState(DEFAULT_SEASONS);
+  const [products]=useState(INIT_PRODS);
+
+  useEffect(()=>{
+    if(!currentUser)return;
+    const load=async()=>{
+      const {data,error}=await supabase.from('advertiser_seasons').select(`*,advertiser:advertisers(*),line_items(*)`);
+      if(error){console.error(error);return;}
+      if(data){
+        const mapped=data.map(r=>({
+          id:r.id,advertiser_id:r.advertiser_id,
+          business:r.advertiser?.business||"",contact:r.advertiser?.contact||"",
+          email:r.advertiser?.email||"",phone:r.advertiser?.phone||"",
+          address:r.advertiser?.address||"",city:r.advertiser?.city||"",
+          state:r.advertiser?.state||"ND",zip:r.advertiser?.zip||"",
+          season:r.season||"",salesperson:r.salesperson||"",
+          lineItems:(r.line_items||[]).map(li=>({id:li.id,adSize:li.ad_size,adType:li.ad_type,basePrice:li.base_price,discount:li.discount,discountType:li.discount_type,amount:li.amount,size:li.size||"",qty:li.qty||1})),
+          totalAmount:r.total_amount||0,paid:r.paid||false,
+          dateSale:r.date_sale||"",datePaid:r.date_paid||"",
+          payMethod:r.pay_method||"",checkNum:r.check_num||"",
+          newAd:r.new_ad||false,newAdvertiser:r.new_advertiser||false,
+          sameAd:r.same_ad||false,overdue:r.overdue||false,
+          notes:r.advertiser?.notes||"",signature:r.signature||null,
+          adPhoto:r.advertiser?.ad_photo||null,lastYearPhoto:r.advertiser?.last_year_photo||null,
+          history:[],
+        }));
+        setAdvertisers(mapped);
+      }
+    };
+    load();
+  },[currentUser]);
+
   if(!currentUser)return <Login onLogin={u=>{setCurrentUser(u);setActive("dashboard");}}/>;
+
   const pages={
     dashboard:<Dashboard advertisers={advertisers} user={currentUser} seasons={seasons} setSeasons={setSeasons}/>,
     advertisers:<Advertisers advertisers={advertisers} setAdvertisers={setAdvertisers} salespeople={salespeople} user={currentUser} seasons={seasons} setSeasons={setSeasons}/>,
-    invoices:<Invoices advertisers={advertisers} seasons={seasons} setSeasons={setSeasons}/>,
+    invoices:<Invoices advertisers={advertisers} setAdvertisers={setAdvertisers} seasons={seasons} setSeasons={setSeasons}/>,
     products:<Products user={currentUser}/>,
     rankings:<Rankings/>,
     website:<WebsiteAds/>,
     books:<BookLibrary/>,
-    event:<EventSale products={INIT_PRODS}/>,
+    event:<EventSale products={products}/>,
     mileage:<Mileage user={currentUser}/>,
     reports:<Reports advertisers={advertisers} salespeople={salespeople} seasons={seasons} setSeasons={setSeasons}/>,
     settings:<Settings salespeople={salespeople} setSalespeople={setSalespeople}/>,
   };
+
   return <div style={{display:"flex",minHeight:"100vh",fontFamily:"system-ui,-apple-system,sans-serif",background:LIGHT_BG}}>
     <Sidebar active={active} setActive={setActive} user={currentUser} onLogout={()=>setCurrentUser(null)}/>
     <div style={{flex:1,padding:"1.75rem",overflowY:"auto",minWidth:0}}>{pages[active]}</div>
