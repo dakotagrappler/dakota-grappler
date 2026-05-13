@@ -226,7 +226,7 @@ function AdvForm({existing,onSave,onClose,salespeople,user,seasons,allAdvertiser
     <LineItemEditor lineItems={lineItems} setLineItems={setLineItems}/>
     <div style={{display:"flex",flexWrap:"wrap",gap:"0 12px"}}>
       <DatePicker label="Date of Sale" value={f.dateSale} onChange={v=>set("dateSale",v)} half/>
-      <Sel label="Payment Method" value={f.payMethod} onChange={v=>set("payMethod",v)} options={["check","cash","Square","PayPal"]} half/>
+      <Sel label="Payment Method" value={f.payMethod} onChange={v=>set("payMethod",v)} options={["check","cash","Square","PayPal","Venmo"]} half/>
       {f.payMethod==="check"&&<Inp label="Check #" value={f.checkNum} onChange={v=>set("checkNum",v)} half/>}
     </div>
     <div style={{display:"flex",gap:20,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
@@ -276,16 +276,21 @@ function ImportAdvertisers({onImport,seasons}){
   </div>;
 }
 
-function InvoicePreview({a,onSigned}){
+function InvoicePreview({a,onSigned,settings}){
   const [sig,setSig]=useState(a.signature||null);
   const [saved,setSaved]=useState(!!a.signature);
   const total=a.lineItems.reduce((s,l)=>s+(l.amount*(l.qty||1)),0);
   const saveSig=()=>{if(onSigned)onSigned(sig);setSaved(true);};
   const clearSig=()=>{setSig(null);setSaved(false);if(onSigned)onSigned(null);};
+  const brandName=settings?.brand||"DAKOTA GRAPPLER";
+  const footerMsg=settings?.footer||"Thanks from Dakota Grappler!";
+  const paypalUser=settings?.paypalUsername||"dakotagrappler";
+  const venmoUser=settings?.venmoUsername||"dakotagrappler";
+const squareLink=settings?.squareLink||"https://square.link/u/9eXw7aSp";
   return <div>
     <div style={{borderBottom:`3px solid ${GOLD}`,paddingBottom:"1rem",marginBottom:"1rem"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-        <div><div style={{fontWeight:800,fontSize:20,color:NAVY}}>🤼 DAKOTA GRAPPLER</div><div style={{color:GOLD,fontWeight:600,fontSize:11,marginTop:2}}>Preseason Wrestling Book · {a.season}</div></div>
+        <div><div style={{fontWeight:800,fontSize:20,color:NAVY}}>🤼 {brandName}</div><div style={{color:GOLD,fontWeight:600,fontSize:11,marginTop:2}}>Preseason Wrestling Book · {a.season}</div></div>
         <div style={{textAlign:"right",fontSize:11,color:MUTED}}><div>Date: {a.dateSale}</div><div>Invoice #: DG-{String(a.id).padStart(4,"0")}</div></div>
       </div>
     </div>
@@ -312,17 +317,14 @@ function InvoicePreview({a,onSigned}){
       </div>
     </div>
     <div style={{background:NAVY,borderRadius:8,padding:"12px 16px",marginBottom:"1rem",textAlign:"center"}}>
-      <div style={{color:WHITE,fontSize:12,marginBottom:6,fontWeight:500}}>Thanks from Dakota Grappler! Find us at <span style={{color:GOLD_LIGHT}}>dakotagrappler.com</span></div>
-      <div style={{display:"flex",justifyContent:"center",gap:16}}>
-        <div style={{display:"flex",alignItems:"center",gap:5,color:"rgba(255,255,255,0.85)",fontSize:12}}><svg width="16" height="16" viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#1877F2"/><path d="M16 8h-2a1 1 0 00-1 1v2h3l-.5 3H13v7h-3v-7H8v-3h2V9a4 4 0 014-4h2v3z" fill="white"/></svg>Facebook</div>
-        <div style={{display:"flex",alignItems:"center",gap:5,color:"rgba(255,255,255,0.85)",fontSize:12}}><svg width="16" height="16" viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#000"/><path d="M18 4h-3l-3 4.5L9 4H4l5.5 7.5L4 20h3l3.5-5 3.5 5h5l-6-8L18 4z" fill="white"/></svg>X</div>
-        <div style={{display:"flex",alignItems:"center",gap:5,color:"rgba(255,255,255,0.85)",fontSize:12}}><svg width="16" height="16" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="url(#iggrad)"/><defs><linearGradient id="iggrad" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stopColor="#f09433"/><stop offset="50%" stopColor="#dc2743"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs><circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1.2" fill="white"/><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="white" strokeWidth="2"/></svg>Instagram</div>
-      </div>
+      <div style={{color:WHITE,fontSize:12,marginBottom:6,fontWeight:500}}>{footerMsg} Find us at <span style={{color:GOLD_LIGHT}}>dakotagrappler.com</span></div>
     </div>
     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
       <Btn full onClick={()=>alert("📧 Invoice emailed to "+a.email)}>📧 Email to {a.contact}</Btn>
       <Btn full color="gold" onClick={()=>window.print()}>🖨️ Print</Btn>
-      <Btn full color="green" onClick={()=>window.open(`https://www.paypal.com/paypalme/dakotagrappler/${total}`,'_blank')}>🅿 PayPal ${total.toLocaleString()}</Btn>
+      <Btn full color="green" onClick={()=>window.open(`https://www.paypal.com/paypalme/${paypalUser}/${total}`,'_blank')}>🅿 PayPal ${total.toLocaleString()}</Btn>
+      <Btn full color="light" onClick={()=>window.open(`https://venmo.com/${venmoUser}?txn=pay&amount=${total}&note=DakotaGrappler-DG-${String(a.id).padStart(4,"0")}`,'_blank')}>💸 Venmo ${total.toLocaleString()}</Btn>
+      <Btn full color="light" onClick={()=>window.open(squareLink,'_blank')}>◻️ Square ${total.toLocaleString()}</Btn>
     </div>
   </div>;
 }
@@ -387,7 +389,7 @@ function Dashboard({advertisers,user,seasons,setSeasons}){
   </div>;
 }
 
-function Advertisers({advertisers,setAdvertisers,salespeople,user,seasons,setSeasons}){
+function Advertisers({advertisers,setAdvertisers,salespeople,user,seasons,setSeasons,settings}){
   const [filter,setFilter]=useState("all");
   const [sort,setSort]=useState("business");
   const [season,setSeason]=useState(seasons[0]||getCurrentSeason());
@@ -469,12 +471,12 @@ function Advertisers({advertisers,setAdvertisers,salespeople,user,seasons,setSea
       </div>
     </Modal>}
     {invoiceView&&<Modal title="Invoice" onClose={()=>setInvoiceView(null)} wide>
-      <InvoicePreview a={invoiceView} onSigned={sig=>{const updated={...invoiceView,signature:sig};setAdvertisers(prev=>prev.map(a=>a.id===invoiceView.id?{...a,signature:sig}:a));setInvoiceView(updated);}}/>
+      <InvoicePreview a={invoiceView} settings={settings} onSigned={sig=>{const updated={...invoiceView,signature:sig};setAdvertisers(prev=>prev.map(a=>a.id===invoiceView.id?{...a,signature:sig}:a));setInvoiceView(updated);}}/>
     </Modal>}
   </div>;
 }
 
-function Invoices({advertisers,setAdvertisers,seasons,setSeasons}){
+function Invoices({advertisers,setAdvertisers,seasons,setSeasons,settings}){
   const [season,setSeason]=useState(seasons[0]||getCurrentSeason());
   const [sel,setSel]=useState(null);
   const [sf,setSf]=useState("all");
@@ -505,30 +507,69 @@ function Invoices({advertisers,setAdvertisers,seasons,setSeasons}){
         </tr>)}</tbody>
       </table>
     </div>
-    {sel&&<Modal title="Invoice" onClose={()=>setSel(null)} wide><InvoicePreview a={sel} onSigned={sig=>setSel(prev=>({...prev,signature:sig}))}/></Modal>}
+    {sel&&<Modal title="Invoice" onClose={()=>setSel(null)} wide><InvoicePreview a={sel} settings={settings} onSigned={sig=>setSel(prev=>({...prev,signature:sig}))}/></Modal>}
   </div>;
 }
 
+// ── PRODUCTS (Supabase connected) ──────────────────────────────────────────
 function Products({user}){
-  const [prods,setProds]=useState(INIT_PRODS);
+  const [prods,setProds]=useState([]);
+  const [loading,setLoading]=useState(true);
   const [adPrices,setAdPrices]=useState(AD_SIZES);
   const [tab,setTab]=useState("products");
   const [showForm,setShowForm]=useState(false);
   const [editProd,setEditProd]=useState(null);
   const [np,setNp]=useState({name:"",price:"",type:"Apparel",sizes:[],photo:null});
   const [ep,setEp]=useState({});
+
+  useEffect(()=>{
+    const load=async()=>{
+      const {data,error}=await supabase.from('products').select('*').order('created_at');
+      if(error){console.error(error);setLoading(false);return;}
+      if(data&&data.length>0){
+        setProds(data.map(p=>({id:p.id,name:p.name,price:p.price,type:p.type,sizes:p.sizes||[],photo:p.photo})));
+      }else{
+        // seed with defaults if empty
+        const {data:inserted}=await supabase.from('products').insert(INIT_PRODS.map(p=>({name:p.name,price:p.price,type:p.type,sizes:p.sizes,photo:p.photo}))).select();
+        if(inserted)setProds(inserted.map(p=>({id:p.id,name:p.name,price:p.price,type:p.type,sizes:p.sizes||[],photo:p.photo})));
+      }
+      setLoading(false);
+    };
+    load();
+  },[]);
+
   const openEdit=p=>{setEditProd({...p});setShowForm(true);};
   const openAdd=()=>{setEditProd(null);setNp({name:"",price:"",type:"Apparel",sizes:[],photo:null});setShowForm(true);};
-  const saveProduct=()=>{if(editProd){setProds(prev=>prev.map(p=>p.id===editProd.id?editProd:p));}else{setProds(prev=>[...prev,{...np,id:Date.now(),price:Number(np.price)}]);}setShowForm(false);setEditProd(null);};
+
+  const saveProduct=async()=>{
+    if(editProd){
+      await supabase.from('products').update({name:editProd.name,price:Number(editProd.price),type:editProd.type,sizes:editProd.sizes,photo:editProd.photo}).eq('id',editProd.id);
+      setProds(prev=>prev.map(p=>p.id===editProd.id?{...editProd,price:Number(editProd.price)}:p));
+    }else{
+      const {data}=await supabase.from('products').insert({name:np.name,price:Number(np.price),type:np.type,sizes:np.sizes,photo:np.photo}).select();
+      if(data)setProds(prev=>[...prev,{id:data[0].id,name:np.name,price:Number(np.price),type:np.type,sizes:np.sizes,photo:np.photo}]);
+    }
+    setShowForm(false);setEditProd(null);
+  };
+
+  const deleteProduct=async id=>{
+    if(!window.confirm("Delete this product?"))return;
+    await supabase.from('products').delete().eq('id',id);
+    setProds(prev=>prev.filter(p=>p.id!==id));
+  };
+
   const f=editProd||np;
   const setF=(k,v)=>editProd?setEditProd(p=>({...p,[k]:v})):setNp(p=>({...p,[k]:v}));
+
+  if(loading)return <div style={{padding:"2rem",color:MUTED}}>Loading products…</div>;
+
   return <div>
     <h2 style={{color:NAVY,fontWeight:700,marginBottom:"1rem"}}>Products & Pricing</h2>
     <div style={{display:"flex",gap:8,marginBottom:"1rem"}}>{["products",...(user.role==="owner"?["adprices"]:[])].map(t=><Btn key={t} color={tab===t?"navy":"light"} small onClick={()=>setTab(t)}>{t==="products"?"Products":"Ad Prices (Owner)"}</Btn>)}</div>
     {tab==="products"&&<div>
       <div style={{display:"grid",gap:10,marginBottom:"1rem"}}>{prods.map(p=><div key={p.id} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,padding:"1rem 1.25rem",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-        <div style={{display:"flex",gap:12,alignItems:"center"}}>{p.photo?<img src={p.photo} style={{width:56,height:56,objectFit:"cover",borderRadius:6,border:`1px solid ${BORDER}`}}/>:<div style={{width:56,height:56,borderRadius:6,border:`2px dashed ${BORDER}`,display:"flex",alignItems:"center",justifyContent:"center",color:MUTED,fontSize:10}}>No photo</div>}<div><div style={{fontWeight:600,color:NAVY}}>{p.name}</div><div style={{color:MUTED,fontSize:12}}>{p.type}{p.sizes.length>0?" · "+p.sizes.join(", "):""}</div></div></div>
-        <div style={{display:"flex",alignItems:"center",gap:10}}><div style={{fontWeight:700,color:NAVY,fontSize:16}}>${p.price}</div><Btn small color="gold" onClick={()=>openEdit(p)}>Edit</Btn><Btn small color="red" onClick={()=>setProds(prev=>prev.filter(x=>x.id!==p.id))}>Delete</Btn></div>
+        <div style={{display:"flex",gap:12,alignItems:"center"}}>{p.photo?<img src={p.photo} style={{width:56,height:56,objectFit:"cover",borderRadius:6,border:`1px solid ${BORDER}`}}/>:<div style={{width:56,height:56,borderRadius:6,border:`2px dashed ${BORDER}`,display:"flex",alignItems:"center",justifyContent:"center",color:MUTED,fontSize:10}}>No photo</div>}<div><div style={{fontWeight:600,color:NAVY}}>{p.name}</div><div style={{color:MUTED,fontSize:12}}>{p.type}{p.sizes&&p.sizes.length>0?" · "+p.sizes.join(", "):""}</div></div></div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}><div style={{fontWeight:700,color:NAVY,fontSize:16}}>${p.price}</div><Btn small color="gold" onClick={()=>openEdit(p)}>Edit</Btn><Btn small color="red" onClick={()=>deleteProduct(p.id)}>Delete</Btn></div>
       </div>)}</div>
       <Btn onClick={openAdd}>+ Add Product</Btn>
       {showForm&&<Modal title={editProd?"Edit Product":"Add Product"} onClose={()=>{setShowForm(false);setEditProd(null);}}>
@@ -556,20 +597,68 @@ function Products({user}){
   </div>;
 }
 
+// ── RANKINGS ADS (Supabase connected) ──────────────────────────────────────
 function Rankings(){
-  const [entries,setEntries]=useState([{id:1,business:"Bismarck Hardware Co.",ranking:"SD Boys Class A",type:"Season",weeks:[],amount:750,paid:true},{id:2,business:"Fargo Sports Medicine",ranking:"ND Boys Class A",type:"Weekly",weeks:["Wk 1","Wk 2","Wk 3"],amount:300,paid:false}]);
+  const [entries,setEntries]=useState([]);
+  const [loading,setLoading]=useState(true);
   const [showForm,setShowForm]=useState(false);
   const [f,setF]=useState({business:"",ranking:RANKINGS[0],type:"Season",weeks:[],paid:false});
   const set=(k,v)=>setF(p=>({...p,[k]:v}));
+
+  useEffect(()=>{
+    const load=async()=>{
+      const {data,error}=await supabase.from('rankings_ads').select('*').order('created_at',{ascending:false});
+      if(error){console.error(error);setLoading(false);return;}
+      if(data)setEntries(data.map(r=>({id:r.id,business:r.business,ranking:r.ranking,type:r.type,weeks:r.weeks||[],amount:r.amount,paid:r.paid})));
+      setLoading(false);
+    };
+    load();
+  },[]);
+
   const total=f.type==="Season"?750:f.weeks.length*100;
+
+  const save=async()=>{
+    if(!f.business)return;
+    const row={business:f.business,ranking:f.ranking,type:f.type,weeks:f.weeks,amount:total,paid:f.paid};
+    const {data}=await supabase.from('rankings_ads').insert(row).select();
+    if(data)setEntries(p=>[{id:data[0].id,...row},...p]);
+    setShowForm(false);
+    setF({business:"",ranking:RANKINGS[0],type:"Season",weeks:[],paid:false});
+  };
+
+  const deletEntry=async id=>{
+    if(!window.confirm("Delete this rankings ad?"))return;
+    await supabase.from('rankings_ads').delete().eq('id',id);
+    setEntries(p=>p.filter(e=>e.id!==id));
+  };
+
+  const togglePaid=async(id,paid)=>{
+    await supabase.from('rankings_ads').update({paid:!paid}).eq('id',id);
+    setEntries(p=>p.map(e=>e.id===id?{...e,paid:!paid}:e));
+  };
+
+  if(loading)return <div style={{padding:"2rem",color:MUTED}}>Loading rankings ads…</div>;
+
   return <div>
     <h2 style={{color:NAVY,fontWeight:700,marginBottom:"1rem"}}>Wrestling Rankings Ads</h2>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:8,marginBottom:"1.25rem"}}>{RANKINGS.map(r=>{const c=entries.filter(e=>e.ranking===r).length;return <div key={r} style={{background:NAVY,color:GOLD_LIGHT,borderRadius:8,padding:"9px 12px",fontSize:12,fontWeight:500,display:"flex",justifyContent:"space-between",alignItems:"center"}}><span>🏆 {r}</span>{c>0&&<span style={{background:GOLD,color:NAVY,borderRadius:10,fontSize:10,padding:"1px 7px",fontWeight:700}}>{c}</span>}</div>;})}
     </div>
     <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,overflowX:"auto",marginBottom:"1rem"}}>
       <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,minWidth:480}}>
-        <thead><tr style={{background:NAVY,color:WHITE}}>{["Business","Ranking","Type","Weeks","Amount","Status"].map(h=><th key={h} style={{padding:"10px 12px",textAlign:h==="Amount"?"right":"left",fontWeight:600}}>{h}</th>)}</tr></thead>
-        <tbody>{entries.map((e,i)=><tr key={e.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}><td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{e.business}</td><td style={{padding:"9px 12px",color:MUTED,fontSize:12}}>{e.ranking}</td><td style={{padding:"9px 12px"}}><Badge text={e.type} color={e.type==="Season"?"navy":"blue"}/></td><td style={{padding:"9px 12px",color:MUTED,fontSize:12}}>{e.weeks.length>0?e.weeks.join(", "):"Full Season"}</td><td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>${e.amount}</td><td style={{padding:"9px 12px"}}>{e.paid?<Badge text="Paid" color="green"/>:<Badge text="Unpaid" color="orange"/>}</td></tr>)}</tbody>
+        <thead><tr style={{background:NAVY,color:WHITE}}>{["Business","Ranking","Type","Weeks","Amount","Status",""].map(h=><th key={h} style={{padding:"10px 12px",textAlign:h==="Amount"?"right":"left",fontWeight:600}}>{h}</th>)}</tr></thead>
+        <tbody>{entries.length===0&&<tr><td colSpan={7} style={{padding:"2rem",textAlign:"center",color:MUTED}}>No rankings ads yet.</td></tr>}
+        {entries.map((e,i)=><tr key={e.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}>
+          <td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{e.business}</td>
+          <td style={{padding:"9px 12px",color:MUTED,fontSize:12}}>{e.ranking}</td>
+          <td style={{padding:"9px 12px"}}><Badge text={e.type} color={e.type==="Season"?"navy":"blue"}/></td>
+          <td style={{padding:"9px 12px",color:MUTED,fontSize:12}}>{e.weeks&&e.weeks.length>0?e.weeks.join(", "):"Full Season"}</td>
+          <td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>${e.amount}</td>
+          <td style={{padding:"9px 12px"}}>{e.paid?<Badge text="Paid" color="green"/>:<Badge text="Unpaid" color="orange"/>}</td>
+          <td style={{padding:"9px 12px"}}><div style={{display:"flex",gap:4}}>
+            <Btn small color={e.paid?"light":"green"} onClick={()=>togglePaid(e.id,e.paid)}>{e.paid?"↩":"✓ Pay"}</Btn>
+            <Btn small color="red" onClick={()=>deletEntry(e.id)}>🗑</Btn>
+          </div></td>
+        </tr>)}</tbody>
       </table>
     </div>
     <Btn onClick={()=>setShowForm(true)}>+ Add Rankings Ad</Btn>
@@ -580,23 +669,72 @@ function Rankings(){
       {f.type==="Weekly"&&<div style={{marginBottom:10}}><label style={{display:"block",color:MUTED,fontSize:12,marginBottom:6}}>Select Weeks</label><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{["Wk 1","Wk 2","Wk 3","Wk 4","Wk 5","Wk 6","Wk 7","Wk 8"].map(w=><label key={w} style={{display:"flex",alignItems:"center",gap:4,fontSize:13,cursor:"pointer"}}><input type="checkbox" checked={f.weeks.includes(w)} onChange={e=>set("weeks",e.target.checked?[...f.weeks,w]:f.weeks.filter(x=>x!==w))}/>{w}</label>)}</div></div>}
       <div style={{background:LIGHT_BG,borderRadius:6,padding:"9px 12px",fontSize:13,marginBottom:10}}>Total: <strong>${total}</strong></div>
       <label style={{display:"flex",alignItems:"center",gap:7,fontSize:13,color:NAVY,cursor:"pointer",marginBottom:"1rem"}}><input type="checkbox" checked={f.paid} onChange={e=>set("paid",e.target.checked)}/> Mark as Paid</label>
-      <div style={{display:"flex",gap:8}}><Btn full color="light" onClick={()=>setShowForm(false)}>Cancel</Btn><Btn full onClick={()=>{if(!f.business)return;setEntries(p=>[...p,{...f,id:Date.now(),amount:total}]);setShowForm(false);}}>Save</Btn></div>
+      <div style={{display:"flex",gap:8}}><Btn full color="light" onClick={()=>setShowForm(false)}>Cancel</Btn><Btn full onClick={save}>Save</Btn></div>
     </Modal>}
   </div>;
 }
 
+// ── WEBSITE ADS (Supabase connected) ───────────────────────────────────────
 function WebsiteAds(){
-  const [ads,setAds]=useState([{id:1,business:"Rapid City Chiro",size:"Small",price:60,months:3,paid:false},{id:2,business:"Bismarck Hardware Co.",size:"Medium",price:150,months:1,paid:true}]);
+  const [ads,setAds]=useState([]);
+  const [loading,setLoading]=useState(true);
   const [showForm,setShowForm]=useState(false);
-  const [f,setF]=useState({business:"",size:"Small",price:60,months:1,paid:false});
+  const [f,setF]=useState({business:"",size:"Small",months:1,paid:false});
   const set=(k,v)=>setF(p=>({...p,[k]:v}));
+  const priceMap={Small:60,Medium:150,Large:300};
+
+  useEffect(()=>{
+    const load=async()=>{
+      const {data,error}=await supabase.from('website_ads').select('*').order('created_at',{ascending:false});
+      if(error){console.error(error);setLoading(false);return;}
+      if(data)setAds(data.map(r=>({id:r.id,business:r.business,size:r.size,price:r.price,months:r.months,paid:r.paid})));
+      setLoading(false);
+    };
+    load();
+  },[]);
+
+  const save=async()=>{
+    if(!f.business)return;
+    const price=priceMap[f.size]||60;
+    const row={business:f.business,size:f.size,price,months:Number(f.months||1),paid:f.paid};
+    const {data}=await supabase.from('website_ads').insert(row).select();
+    if(data)setAds(p=>[{id:data[0].id,...row},...p]);
+    setShowForm(false);
+    setF({business:"",size:"Small",months:1,paid:false});
+  };
+
+  const deleteAd=async id=>{
+    if(!window.confirm("Delete this website ad?"))return;
+    await supabase.from('website_ads').delete().eq('id',id);
+    setAds(p=>p.filter(a=>a.id!==id));
+  };
+
+  const togglePaid=async(id,paid)=>{
+    await supabase.from('website_ads').update({paid:!paid}).eq('id',id);
+    setAds(p=>p.map(a=>a.id===id?{...a,paid:!paid}:a));
+  };
+
+  if(loading)return <div style={{padding:"2rem",color:MUTED}}>Loading website ads…</div>;
+
   return <div>
     <h2 style={{color:NAVY,fontWeight:700,marginBottom:"1rem"}}>Website Ads</h2>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:"1.5rem"}}>{[{l:"Small",p:60},{l:"Medium",p:150},{l:"Large",p:300}].map(t=><div key={t.l} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:9,padding:"1rem",textAlign:"center"}}><div style={{fontWeight:600,color:NAVY}}>{t.l}</div><div style={{fontWeight:800,color:GOLD,fontSize:20,margin:"4px 0"}}>${t.p}<span style={{fontSize:12,color:MUTED,fontWeight:400}}>/mo</span></div></div>)}</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:"1.5rem"}}>{[{l:"Small",p:60},{l:"Medium",p:150},{l:"Large",p:300}].map(t=><div key={t.l} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:9,padding:"1rem",textAlign:"center"}}><div style={{fontWeight:600,color:NAVY}}>{t.l}</div><div style={{fontWeight:800,color:GOLD,fontSize:20,margin:"4px 0"}}>${t.p}<span style={{fontSize:12,color:MUTED,fontWeight:400}}>/mo</span></div><div style={{fontSize:11,color:MUTED}}>{ads.filter(a=>a.size===t.l).length} active</div></div>)}</div>
     <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,overflowX:"auto",marginBottom:"1rem"}}>
       <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,minWidth:400}}>
-        <thead><tr style={{background:NAVY,color:WHITE}}>{["Business","Size","Months","Monthly","Total","Status"].map(h=><th key={h} style={{padding:"10px 12px",textAlign:["Monthly","Total"].includes(h)?"right":"left",fontWeight:600}}>{h}</th>)}</tr></thead>
-        <tbody>{ads.map((a,i)=><tr key={a.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}><td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{a.business}</td><td style={{padding:"9px 12px",color:MUTED}}>{a.size}</td><td style={{padding:"9px 12px",color:MUTED}}>{a.months}</td><td style={{padding:"9px 12px",textAlign:"right",color:MUTED}}>${a.price}/mo</td><td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>${a.price*a.months}</td><td style={{padding:"9px 12px"}}>{a.paid?<Badge text="Paid" color="green"/>:<Badge text="Unpaid" color="orange"/>}</td></tr>)}</tbody>
+        <thead><tr style={{background:NAVY,color:WHITE}}>{["Business","Size","Months","Monthly","Total","Status",""].map(h=><th key={h} style={{padding:"10px 12px",textAlign:["Monthly","Total"].includes(h)?"right":"left",fontWeight:600}}>{h}</th>)}</tr></thead>
+        <tbody>{ads.length===0&&<tr><td colSpan={7} style={{padding:"2rem",textAlign:"center",color:MUTED}}>No website ads yet.</td></tr>}
+        {ads.map((a,i)=><tr key={a.id} style={{background:i%2===0?LIGHT_BG:WHITE,borderBottom:`1px solid ${BORDER}`}}>
+          <td style={{padding:"9px 12px",fontWeight:500,color:NAVY}}>{a.business}</td>
+          <td style={{padding:"9px 12px",color:MUTED}}>{a.size}</td>
+          <td style={{padding:"9px 12px",color:MUTED}}>{a.months}</td>
+          <td style={{padding:"9px 12px",textAlign:"right",color:MUTED}}>${a.price}/mo</td>
+          <td style={{padding:"9px 12px",textAlign:"right",fontWeight:700,color:NAVY}}>${a.price*a.months}</td>
+          <td style={{padding:"9px 12px"}}>{a.paid?<Badge text="Paid" color="green"/>:<Badge text="Unpaid" color="orange"/>}</td>
+          <td style={{padding:"9px 12px"}}><div style={{display:"flex",gap:4}}>
+            <Btn small color={a.paid?"light":"green"} onClick={()=>togglePaid(a.id,a.paid)}>{a.paid?"↩":"✓ Pay"}</Btn>
+            <Btn small color="red" onClick={()=>deleteAd(a.id)}>🗑</Btn>
+          </div></td>
+        </tr>)}</tbody>
       </table>
     </div>
     <Btn onClick={()=>setShowForm(true)}>+ Add Website Ad</Btn>
@@ -604,9 +742,9 @@ function WebsiteAds(){
       <Inp label="Business Name" value={f.business} onChange={v=>set("business",v)}/>
       <Sel label="Ad Size" value={f.size} onChange={v=>set("size",v)} options={[{value:"Small",label:"Small — $60/mo"},{value:"Medium",label:"Medium — $150/mo"},{value:"Large",label:"Large — $300/mo"}]}/>
       <Inp label="Number of Months" value={f.months} onChange={v=>set("months",v)} type="number"/>
-      <div style={{background:LIGHT_BG,borderRadius:6,padding:"9px 12px",fontSize:13,marginBottom:10}}>Total: <strong>${({Small:60,Medium:150,Large:300}[f.size]||60)*Number(f.months||0)}</strong></div>
+      <div style={{background:LIGHT_BG,borderRadius:6,padding:"9px 12px",fontSize:13,marginBottom:10}}>Total: <strong>${(priceMap[f.size]||60)*Number(f.months||0)}</strong></div>
       <label style={{display:"flex",alignItems:"center",gap:7,fontSize:13,color:NAVY,cursor:"pointer",marginBottom:"1rem"}}><input type="checkbox" checked={f.paid} onChange={e=>set("paid",e.target.checked)}/> Paid</label>
-      <div style={{display:"flex",gap:8}}><Btn full color="light" onClick={()=>setShowForm(false)}>Cancel</Btn><Btn full onClick={()=>{if(!f.business)return;setAds(p=>[...p,{...f,id:Date.now()}]);setShowForm(false);}}>Save</Btn></div>
+      <div style={{display:"flex",gap:8}}><Btn full color="light" onClick={()=>setShowForm(false)}>Cancel</Btn><Btn full onClick={save}>Save</Btn></div>
     </Modal>}
   </div>;
 }
@@ -630,7 +768,7 @@ function BookLibrary(){
       <Inp label="Buyer Name" value={sale.buyer} onChange={v=>setSale(p=>({...p,buyer:v}))} placeholder="Walk-up customer"/>
       <Inp label="Email" value={sale.email} onChange={v=>setSale(p=>({...p,email:v}))} type="email"/>
       <Inp label="Sale Price ($)" value={sale.price} onChange={v=>setSale(p=>({...p,price:v}))} type="number"/>
-      <Sel label="Payment" value={sale.payment} onChange={v=>setSale(p=>({...p,payment:v}))} options={["Cash","Square","PayPal","Free / Comp"]}/>
+      <Sel label="Payment" value={sale.payment} onChange={v=>setSale(p=>({...p,payment:v}))} options={["Cash","Square","PayPal","Venmo","Free / Comp"]}/>
       <div style={{display:"flex",gap:8,marginTop:"1rem"}}><Btn full color="light" onClick={()=>setSellModal(null)}>Cancel</Btn><Btn full color="green" onClick={()=>{alert(`✓ PDF sent · $${sale.price} via ${sale.payment}`);setSellModal(null);}}>📧 Complete Sale & Send PDF</Btn></div>
     </Modal>}
   </div>;
@@ -645,7 +783,7 @@ function EventSale({products}){
   const [buyer,setBuyer]=useState({name:"",email:""});
   const [salesLog,setSalesLog]=useState([]);
   const total=cart.reduce((s,i)=>s+i.price,0);
-  const addToCart=p=>{if(p.sizes.length>0&&!selSize[p.id]){alert("Please select a size.");return;}setCart(prev=>[...prev,{id:Date.now(),name:p.name+(selSize[p.id]?" ("+selSize[p.id]+")":""),price:p.price}]);};
+  const addToCart=p=>{if(p.sizes&&p.sizes.length>0&&!selSize[p.id]){alert("Please select a size.");return;}setCart(prev=>[...prev,{id:Date.now(),name:p.name+(selSize[p.id]?" ("+selSize[p.id]+")":""),price:p.price}]);};
   const completeSale=method=>{setSalesLog(p=>[{id:Date.now(),event:eventName,items:cart.length,total,method,buyer:buyer.name||"Walk-up",time:new Date().toLocaleTimeString()},...p]);setCart([]);setBuyer({name:"",email:""});setCheckoutModal(false);alert(`✓ Sale complete! $${total} via ${method}`);};
   return <div>
     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:"1.25rem",flexWrap:"wrap"}}>
@@ -655,8 +793,8 @@ function EventSale({products}){
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
       <div><div style={{fontWeight:600,color:NAVY,marginBottom:10,fontSize:14}}>Products</div>
         <div style={{display:"grid",gap:10}}>{(products||INIT_PRODS).map(p=><div key={p.id} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:9,padding:"12px 14px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:p.sizes.length>0?8:0}}><div><div style={{fontWeight:600,color:NAVY,fontSize:13}}>{p.name}</div><div style={{fontWeight:700,color:GOLD,fontSize:15}}>${p.price}</div></div><Btn small onClick={()=>addToCart(p)}>+ Add</Btn></div>
-          {p.sizes.length>0&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{p.sizes.map(sz=><button key={sz} onClick={()=>setSelSize(prev=>({...prev,[p.id]:sz}))} style={{background:selSize[p.id]===sz?NAVY:LIGHT_BG,color:selSize[p.id]===sz?WHITE:NAVY,border:`1px solid ${selSize[p.id]===sz?NAVY:BORDER}`,borderRadius:5,padding:"3px 10px",fontSize:12,cursor:"pointer",fontWeight:selSize[p.id]===sz?600:400}}>{sz}</button>)}</div>}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:p.sizes&&p.sizes.length>0?8:0}}><div><div style={{fontWeight:600,color:NAVY,fontSize:13}}>{p.name}</div><div style={{fontWeight:700,color:GOLD,fontSize:15}}>${p.price}</div></div><Btn small onClick={()=>addToCart(p)}>+ Add</Btn></div>
+          {p.sizes&&p.sizes.length>0&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{p.sizes.map(sz=><button key={sz} onClick={()=>setSelSize(prev=>({...prev,[p.id]:sz}))} style={{background:selSize[p.id]===sz?NAVY:LIGHT_BG,color:selSize[p.id]===sz?WHITE:NAVY,border:`1px solid ${selSize[p.id]===sz?NAVY:BORDER}`,borderRadius:5,padding:"3px 10px",fontSize:12,cursor:"pointer",fontWeight:selSize[p.id]===sz?600:400}}>{sz}</button>)}</div>}
         </div>)}</div>
       </div>
       <div><div style={{fontWeight:600,color:NAVY,marginBottom:10,fontSize:14}}>Cart</div>
@@ -664,7 +802,7 @@ function EventSale({products}){
           {cart.length===0&&<div style={{color:MUTED,fontSize:13,textAlign:"center",paddingTop:"1.5rem"}}>No items yet.</div>}
           {cart.map(item=><div key={item.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:`1px solid ${BORDER}`,fontSize:13}}><div style={{color:NAVY}}>{item.name}</div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontWeight:700,color:NAVY}}>${item.price}</span><button onClick={()=>setCart(prev=>prev.filter(i=>i.id!==item.id))} style={{background:"none",border:"none",color:RED,cursor:"pointer",fontSize:16,lineHeight:1}}>✕</button></div></div>)}
           {cart.length>0&&<div><div style={{display:"flex",justifyContent:"space-between",padding:"10px 0 0",fontWeight:700,fontSize:16,color:NAVY}}><span>Total</span><span>${total}</span></div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:10}}><Btn color="green" onClick={()=>setCheckoutModal("Cash")}>💵 Cash</Btn><Btn onClick={()=>setCheckoutModal("Square")}>💳 Square</Btn><Btn color="light" onClick={()=>setCheckoutModal("PayPal")}>🅿 PayPal</Btn><Btn color="red" onClick={()=>setCart([])}>🗑 Clear</Btn></div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:10}}><Btn color="green" onClick={()=>setCheckoutModal("Cash")}>💵 Cash</Btn><Btn onClick={()=>setCheckoutModal("Square")}>💳 Square</Btn><Btn color="light" onClick={()=>setCheckoutModal("PayPal")}>🅿 PayPal</Btn><Btn color="light" onClick={()=>setCheckoutModal("Venmo")}>💸 Venmo</Btn><Btn color="red" onClick={()=>setCart([])}>🗑 Clear</Btn></div>
           </div>}
         </div>
         {salesLog.length>0&&<div style={{marginTop:12}}><div style={{fontWeight:600,color:NAVY,fontSize:13,marginBottom:8}}>Today's Sales</div>{salesLog.map(s=><div key={s.id} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:7,padding:"8px 12px",marginBottom:6,fontSize:12}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontWeight:500,color:NAVY}}>{s.buyer}</span><span style={{fontWeight:700,color:GREEN}}>${s.total}</span></div><div style={{color:MUTED}}>{s.items} item{s.items!==1?"s":""} · {s.method} · {s.time}</div></div>)}</div>}
@@ -785,13 +923,38 @@ function Reports({advertisers,salespeople,seasons,setSeasons}){
   </div>;
 }
 
-function Settings({salespeople,setSalespeople}){
+// ── SETTINGS (Supabase connected) ──────────────────────────────────────────
+function Settings({salespeople,setSalespeople,settings,setSettings}){
   const [lsp,setLsp]=useState(salespeople.map(s=>({...s,rate:s.commission})));
-  const [days,setDays]=useState(15);
-  const [brand,setBrand]=useState("Dakota Grappler");
-  const [footer,setFooter]=useState("Thank you for supporting Dakota wrestling!");
+  const [days,setDays]=useState(settings?.overdueDays||15);
+  const [brand,setBrand]=useState(settings?.brand||"Dakota Grappler");
+  const [footer,setFooter]=useState(settings?.footer||"Thank you for supporting Dakota wrestling!");
+  const [paypalUsername,setPaypalUsername]=useState(settings?.paypalUsername||"dakotagrappler");
+  const [venmoUsername,setVenmoUsername]=useState(settings?.venmoUsername||"dakotagrappler");
   const [saved,setSaved]=useState(false);
+
   const showSaved=()=>{setSaved(true);setTimeout(()=>setSaved(false),3000);};
+
+  const saveCommissions=async()=>{
+    setSalespeople(lsp.map(s=>({...s,commission:s.rate})));
+    await supabase.from('settings').upsert({key:'commissions',value:lsp.map(s=>({name:s.name,commission:s.rate}))},{onConflict:'key'});
+    showSaved();
+  };
+
+  const saveBranding=async()=>{
+    const newSettings={...settings,brand,footer,paypalUsername,venmoUsername};
+    await supabase.from('settings').upsert({key:'branding',value:{brand,footer,paypalUsername,venmoUsername,squareLink:settings?.squareLink||"https://square.link/u/9eXw7aSp"}},{onConflict:'key'});
+    setSettings(newSettings);
+    showSaved();
+  };
+
+  const saveOverdue=async()=>{
+    const newSettings={...settings,overdueDays:Number(days)};
+    await supabase.from('settings').upsert({key:'overdue',value:{days:Number(days)}},{onConflict:'key'});
+    setSettings(newSettings);
+    showSaved();
+  };
+
   return <div>
     <h2 style={{color:NAVY,fontWeight:700,marginBottom:"1rem"}}>Settings</h2>
     {saved&&<InfoBox color="green">✓ Settings saved successfully.</InfoBox>}
@@ -800,22 +963,36 @@ function Settings({salespeople,setSalespeople}){
         <div style={{fontWeight:600,color:NAVY,marginBottom:"1rem",fontSize:15}}>Commission Rates</div>
         <InfoBox color="yellow">🔒 Owner only</InfoBox>
         {lsp.map((s,i)=><div key={s.id} style={{display:"flex",alignItems:"center",gap:12,marginBottom:10,fontSize:13}}><div style={{flex:1,fontWeight:500,color:NAVY}}>{s.name}</div><input type="number" min="0" max="100" value={s.rate} onChange={e=>setLsp(p=>p.map((x,j)=>j===i?{...x,rate:Number(e.target.value)}:x))} style={{width:65,border:`1px solid ${BORDER}`,borderRadius:6,padding:"6px 10px",textAlign:"center",fontSize:13}}/><div style={{color:MUTED}}>%</div></div>)}
-        <Btn small onClick={()=>{setSalespeople(lsp.map(s=>({...s,commission:s.rate})));showSaved();}}>Save Commission Rates</Btn>
-        <div style={{marginTop:12}}><Btn small color="light">+ Add Salesperson</Btn></div>
+        <Btn small onClick={saveCommissions}>Save Commission Rates</Btn>
       </div>
+
       <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,padding:"1.25rem"}}>
         <div style={{fontWeight:600,color:NAVY,marginBottom:"1rem",fontSize:15}}>Invoice Branding</div>
         <Inp label="Business Name on Invoices" value={brand} onChange={setBrand}/>
-        <div style={{marginBottom:10}}><label style={{display:"block",color:MUTED,fontSize:12,marginBottom:4}}>Logo</label><Btn small color="light">📁 Upload Logo</Btn></div>
         <Inp label="Invoice Footer Message" value={footer} onChange={setFooter}/>
-        <Btn small onClick={showSaved}>Save Branding</Btn>
+        <Btn small onClick={saveBranding}>Save Branding</Btn>
       </div>
+
+      <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,padding:"1.25rem"}}>
+        <div style={{fontWeight:600,color:NAVY,marginBottom:"1rem",fontSize:15}}>Payment Links</div>
+        <InfoBox color="blue">These usernames appear on invoices so advertisers can pay online.</InfoBox>
+        <Inp label="PayPal.me username (e.g. dakotagrappler)" value={paypalUsername} onChange={setPaypalUsername}/>
+        <Inp label="Venmo username (e.g. dakotagrappler)" value={venmoUsername} onChange={setVenmoUsername}/>
+        <div style={{fontSize:12,color:MUTED,marginBottom:10}}>
+          PayPal link: paypal.com/paypalme/<strong>{paypalUsername}</strong><br/>
+          Venmo link: venmo.com/<strong>{venmoUsername}</strong>
+        </div>
+        <Inp label="Square payment link" value={settings?.squareLink||""} onChange={v=>setSettings(p=>({...p,squareLink:v}))}/>
+        <Btn small onClick={saveBranding}>Save Payment Links</Btn>
+      </div>
+
       <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,padding:"1.25rem"}}>
         <div style={{fontWeight:600,color:NAVY,marginBottom:"1rem",fontSize:15}}>Overdue & Reminders</div>
         <div style={{display:"flex",alignItems:"center",gap:10,fontSize:13,marginBottom:12}}><span style={{color:MUTED}}>Flag overdue after</span><input type="number" value={days} onChange={e=>setDays(e.target.value)} style={{width:60,border:`1px solid ${BORDER}`,borderRadius:6,padding:"6px 10px",textAlign:"center",fontSize:13}}/><span style={{color:MUTED}}>days</span></div>
         <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:NAVY,cursor:"pointer",marginBottom:12}}><input type="checkbox" defaultChecked/> Auto-send email reminders to overdue accounts</label>
-        <Btn small onClick={showSaved}>Save Settings</Btn>
+        <Btn small onClick={saveOverdue}>Save Settings</Btn>
       </div>
+
       <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:10,padding:"1.25rem"}}>
         <div style={{fontWeight:600,color:NAVY,marginBottom:"1rem",fontSize:15}}>User Logins (up to 10)</div>
         {USERS.map(u=><div key={u.id} style={{display:"flex",alignItems:"center",gap:10,background:LIGHT_BG,borderRadius:6,padding:"8px 12px",marginBottom:8,fontSize:13}}><div style={{flex:1,fontWeight:500,color:NAVY}}>{u.name}</div><Badge text={u.role} color={u.role==="owner"?"navy":"blue"}/><Btn small color="light">Edit</Btn></div>)}
@@ -825,14 +1002,17 @@ function Settings({salespeople,setSalespeople}){
   </div>;
 }
 
+// ── APP ROOT ───────────────────────────────────────────────────────────────
 export default function App(){
   const [currentUser,setCurrentUser]=useState(null);
   const [active,setActive]=useState("dashboard");
   const [advertisers,setAdvertisers]=useState([]);
   const [salespeople,setSalespeople]=useState(INIT_SP);
   const [seasons,setSeasons]=useState(DEFAULT_SEASONS);
-  const [products]=useState(INIT_PRODS);
+  const [products,setProducts]=useState(INIT_PRODS);
+  const [settings,setSettings]=useState({brand:"Dakota Grappler",footer:"Thank you for supporting Dakota wrestling!",paypalUsername:"dakotagrappler",venmoUsername:"dakotagrappler",squareLink:"https://square.link/u/9eXw7aSp",overdueDays:15});
 
+  // Load advertisers
   useEffect(()=>{
     if(!currentUser)return;
     const load=async()=>{
@@ -862,12 +1042,31 @@ export default function App(){
     load();
   },[currentUser]);
 
+  // Load settings
+  useEffect(()=>{
+    if(!currentUser)return;
+    const load=async()=>{
+      const {data}=await supabase.from('settings').select('*');
+      if(data){
+        const branding=data.find(r=>r.key==='branding');
+        const commissions=data.find(r=>r.key==='commissions');
+        const overdue=data.find(r=>r.key==='overdue');
+        if(branding?.value)setSettings(p=>({...p,...branding.value}));
+        if(commissions?.value){
+          setSalespeople(INIT_SP.map(sp=>{const found=commissions.value.find(c=>c.name===sp.name);return found?{...sp,commission:found.commission}:sp;}));
+        }
+        if(overdue?.value)setSettings(p=>({...p,overdueDays:overdue.value.days}));
+      }
+    };
+    load();
+  },[currentUser]);
+
   if(!currentUser)return <Login onLogin={u=>{setCurrentUser(u);setActive("dashboard");}}/>;
 
   const pages={
     dashboard:<Dashboard advertisers={advertisers} user={currentUser} seasons={seasons} setSeasons={setSeasons}/>,
-    advertisers:<Advertisers advertisers={advertisers} setAdvertisers={setAdvertisers} salespeople={salespeople} user={currentUser} seasons={seasons} setSeasons={setSeasons}/>,
-    invoices:<Invoices advertisers={advertisers} setAdvertisers={setAdvertisers} seasons={seasons} setSeasons={setSeasons}/>,
+    advertisers:<Advertisers advertisers={advertisers} setAdvertisers={setAdvertisers} salespeople={salespeople} user={currentUser} seasons={seasons} setSeasons={setSeasons} settings={settings}/>,
+    invoices:<Invoices advertisers={advertisers} setAdvertisers={setAdvertisers} seasons={seasons} setSeasons={setSeasons} settings={settings}/>,
     products:<Products user={currentUser}/>,
     rankings:<Rankings/>,
     website:<WebsiteAds/>,
@@ -875,7 +1074,7 @@ export default function App(){
     event:<EventSale products={products}/>,
     mileage:<Mileage user={currentUser}/>,
     reports:<Reports advertisers={advertisers} salespeople={salespeople} seasons={seasons} setSeasons={setSeasons}/>,
-    settings:<Settings salespeople={salespeople} setSalespeople={setSalespeople}/>,
+    settings:<Settings salespeople={salespeople} setSalespeople={setSalespeople} settings={settings} setSettings={setSettings}/>,
   };
 
   return <div style={{display:"flex",minHeight:"100vh",fontFamily:"system-ui,-apple-system,sans-serif",background:LIGHT_BG}}>
